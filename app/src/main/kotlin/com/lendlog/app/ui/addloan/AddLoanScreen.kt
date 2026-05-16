@@ -89,7 +89,7 @@ fun AddLoanScreen(
             onDismiss = viewModel::dismissPaywall,
             onPurchased = {
                 viewModel.dismissPaywall()
-                viewModel.saveLoan()
+                viewModel.onPurchased()
             }
         )
     }

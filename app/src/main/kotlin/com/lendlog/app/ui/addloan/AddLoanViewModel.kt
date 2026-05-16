@@ -49,27 +49,38 @@ class AddLoanViewModel @Inject constructor(
     fun saveLoan() {
         val state = _uiState.value
         if (!state.isValid) return
-
         viewModelScope.launch {
             if (!repository.canAddLoan()) {
                 _uiState.update { it.copy(showPaywall = true) }
                 return@launch
             }
-
-            _uiState.update { it.copy(isSaving = true) }
-            val loan = repository.createNewLoan(
-                itemName = state.itemName.trim(),
-                notes = state.notes.trim().ifEmpty { null },
-                photoUri = state.photoUri,
-                borrowerName = state.borrowerName.trim(),
-                borrowerContactId = state.borrowerContactId,
-                borrowerPhone = state.borrowerPhone,
-                returnDate = state.returnDate!!,
-                tags = state.tags.trim()
-            )
-            repository.addLoan(loan)
-            notificationScheduler.scheduleForLoan(loan)
-            _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
+            doSaveLoan(state)
         }
+    }
+
+    fun onPurchased() {
+        val state = _uiState.value
+        if (!state.isValid) return
+        viewModelScope.launch {
+            repository.setUnlocked(true)
+            doSaveLoan(state)
+        }
+    }
+
+    private suspend fun doSaveLoan(state: AddLoanUiState) {
+        _uiState.update { it.copy(isSaving = true) }
+        val loan = repository.createNewLoan(
+            itemName = state.itemName.trim(),
+            notes = state.notes.trim().ifEmpty { null },
+            photoUri = state.photoUri,
+            borrowerName = state.borrowerName.trim(),
+            borrowerContactId = state.borrowerContactId,
+            borrowerPhone = state.borrowerPhone,
+            returnDate = state.returnDate!!,
+            tags = state.tags.trim()
+        )
+        repository.addLoan(loan)
+        notificationScheduler.scheduleForLoan(loan)
+        _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
     }
 }

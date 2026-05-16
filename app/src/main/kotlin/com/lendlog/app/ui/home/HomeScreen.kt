@@ -1,5 +1,7 @@
 package com.lendlog.app.ui.home
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -19,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.ui.components.EmptyState
 import com.lendlog.app.ui.components.LoanCard
@@ -27,7 +32,7 @@ import com.lendlog.app.ui.theme.TealLight
 import com.lendlog.app.ui.theme.TealPrimary
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
     onNavigateToAdd: () -> Unit,
@@ -37,6 +42,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    RequestNotificationPermission()
 
     Scaffold(
         topBar = {
@@ -215,6 +221,16 @@ private fun ByItemFeed(
                 LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
             }
         }
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun RequestNotificationPermission() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    val permission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+    LaunchedEffect(Unit) {
+        if (!permission.status.isGranted) permission.launchPermissionRequest()
     }
 }
 

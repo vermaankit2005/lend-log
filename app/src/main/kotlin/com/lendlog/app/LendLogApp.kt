@@ -4,7 +4,6 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
-import android.os.Environment
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
 import com.lendlog.app.worker.NightlyBackupWorker
@@ -50,7 +49,7 @@ class LendLogApp : Application(), Configuration.Provider {
                         cause = cause.cause
                     }
                 }
-                val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val dir = getExternalFilesDir(null) ?: filesDir
                 File(dir, "lendlog-crash-$timestamp.txt").writeText(log)
             } catch (_: Exception) {}
             defaultHandler?.uncaughtException(thread, throwable)

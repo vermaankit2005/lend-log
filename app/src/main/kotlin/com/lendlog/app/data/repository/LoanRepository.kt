@@ -1,7 +1,10 @@
 package com.lendlog.app.data.repository
 
+import android.content.ContentValues
 import android.content.Context
+import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import com.lendlog.app.data.datastore.AppPreferences
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.data.db.LoanDao
@@ -82,9 +85,24 @@ class LoanRepository @Inject constructor(
         return try {
             val loans = loanDao.getAllLoansSnapshot()
             val json = Json { prettyPrint = true }.encodeToString(loans)
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val file = File(downloadsDir, "lendlog-backup.json")
-            file.writeText(json)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = context.contentResolver
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, "lendlog-backup.json")
+                    put(MediaStore.Downloads.MIME_TYPE, "application/json")
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                    ?: return false
+                resolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
+                values.clear()
+                values.put(MediaStore.Downloads.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+            } else {
+                @Suppress("DEPRECATION")
+                val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                File(dir, "lendlog-backup.json").writeText(json)
+            }
             appPreferences.setLastBackupTimestamp(System.currentTimeMillis())
             true
         } catch (e: Exception) {
