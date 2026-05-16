@@ -12,10 +12,6 @@ object ContactPickerHelper {
         val contactId: String?
     )
 
-    operator fun component1(result: ContactResult) = result.name
-    operator fun component2(result: ContactResult) = result.phone
-    operator fun component3(result: ContactResult) = result.contactId
-
     fun resolveContact(context: Context, contactUri: Uri): ContactResult {
         var name: String? = null
         var phone: String? = null
