@@ -4,10 +4,15 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-  <path
-      android:fillColor="#0E9AA7"
-      android:pathData="M54,20 C36.3,20 22,34.3 22,52 C22,62.3 26.8,71.5 34.3,77.5 L34.3,88 L43.5,83.4 C46.9,84.4 50.4,85 54,85 C71.7,85 86,70.7 86,53 C86,35.3 71.7,20 54,20z"/>
+
+  <!-- Bold "L" logotype — centered in the safe zone (21–87) -->
+  <!-- Vertical stroke: x 26–48, y 22–87  |  Horizontal foot: x 26–82, y 67–87 -->
   <path
       android:fillColor="#FFFFFF"
-      android:pathData="M44,42 L64,42 L64,46 L44,46z M44,52 L64,52 L64,56 L44,56z M44,62 L56,62 L56,66 L44,66z"/>
+      android:pathData="M26,22 L48,22 L48,67 L82,67 L82,87 L26,87 Z"/>
+
+  <!-- Tracking dot — upper-right, represents the item being logged -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M64,30 A10,10 0 0,1 84,30 A10,10 0 0,1 64,30 Z"/>
 </vector>

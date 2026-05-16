@@ -2,6 +2,7 @@ package com.lendlog.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.lendlog.app.data.db.Loan
+import com.lendlog.app.ui.theme.BorderColor
 import com.lendlog.app.ui.theme.MutedText
 import com.lendlog.app.ui.theme.OverdueRed
 import com.lendlog.app.ui.theme.TealPrimary
@@ -45,9 +48,11 @@ fun LoanCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, BorderColor)
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
+            // Left accent bar
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -68,6 +73,7 @@ fun LoanCard(
                     Text(
                         text = loan.itemName,
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
