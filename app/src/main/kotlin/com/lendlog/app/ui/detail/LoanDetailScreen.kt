@@ -68,7 +68,10 @@ fun LoanDetailScreen(
             title = { Text("Mark as returned?") },
             text = { Text("This will move the loan to your history.") },
             confirmButton = {
-                TextButton(onClick = viewModel::markReturned) { Text("Confirm") }
+                TextButton(
+                    onClick = viewModel::markReturned,
+                    colors = ButtonDefaults.textButtonColors(contentColor = TealPrimary)
+                ) { Text("Confirm") }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissReturnDialog) { Text("Cancel") }
@@ -114,7 +117,7 @@ fun LoanDetailScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 loan.photoUri?.let { uri ->
                     AsyncImage(
@@ -134,7 +137,8 @@ fun LoanDetailScreen(
                 ) {
                     Text(
                         text = loan.itemName,
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f)
                     )
                     if (loan.isReturned) {
@@ -159,7 +163,8 @@ fun LoanDetailScreen(
                 if (loan.notes != null) {
                     Card(
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(Modifier.padding(16.dp)) {
                             Text(
@@ -179,14 +184,13 @@ fun LoanDetailScreen(
                     }
                 }
 
-                Spacer(Modifier.height(8.dp))
-
                 if (!loan.isReturned) {
                     loan.borrowerPhone?.let { phone ->
                         OutlinedButton(
                             onClick = { WhatsAppHelper.sendNudge(context, phone, loan.itemName) },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TealPrimary)
                         ) {
                             Icon(Icons.Outlined.Chat, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
@@ -214,7 +218,8 @@ fun LoanDetailScreen(
 private fun DetailInfoCard(loan: Loan) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -225,13 +230,13 @@ private fun DetailInfoCard(loan: Loan) {
                 label = "Borrower",
                 value = loan.borrowerName
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
             DetailRow(
                 icon = Icons.Outlined.CalendarMonth,
                 label = "Lent on",
                 value = formatDate(loan.lentDate)
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
             DetailRow(
                 icon = Icons.Outlined.Event,
                 label = "Due on",
@@ -239,7 +244,7 @@ private fun DetailInfoCard(loan: Loan) {
                 valueColor = if (loan.isOverdue) OverdueRed else null
             )
             if (loan.returnedDate != null) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 DetailRow(
                     icon = Icons.Outlined.CheckCircle,
                     label = "Returned on",
@@ -259,8 +264,15 @@ private fun DetailRow(
     valueColor: Color? = null
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, tint = MutedText, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(10.dp))
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(TealPrimary.copy(alpha = 0.08f), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = TealPrimary, modifier = Modifier.size(18.dp))
+        }
+        Spacer(Modifier.width(12.dp))
         Column {
             Text(label, style = MaterialTheme.typography.labelSmall, color = MutedText)
             Text(

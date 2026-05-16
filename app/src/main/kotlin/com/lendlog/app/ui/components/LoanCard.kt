@@ -15,13 +15,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.lendlog.app.data.db.Loan
-import com.lendlog.app.ui.theme.CardSurface
 import com.lendlog.app.ui.theme.MutedText
 import com.lendlog.app.ui.theme.OverdueRed
 import com.lendlog.app.ui.theme.TealPrimary
@@ -44,10 +42,9 @@ fun LoanCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(elevation = 2.dp, shape = RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = CardSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -61,7 +58,7 @@ fun LoanCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                    .padding(horizontal = 14.dp, vertical = 14.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -70,7 +67,7 @@ fun LoanCard(
                 ) {
                     Text(
                         text = loan.itemName,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -92,25 +89,25 @@ fun LoanCard(
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = loan.borrowerName,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MutedText
                     )
                 }
 
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(3.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Outlined.CalendarMonth,
                         contentDescription = null,
-                        tint = MutedText,
+                        tint = if (loan.isOverdue) OverdueRed else MutedText,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(Modifier.width(4.dp))
                     val label = if (loan.isOverdue) "Due" else "Return by"
                     Text(
                         text = "$label ${formatDate(loan.returnDate)}",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = if (loan.isOverdue) OverdueRed else MutedText
                     )
                 }
@@ -132,7 +129,7 @@ fun LoanCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(80.dp)
-                        .padding(8.dp)
+                        .padding(10.dp)
                         .clip(RoundedCornerShape(8.dp))
                 )
             }
@@ -142,7 +139,7 @@ fun LoanCard(
 
 @Composable
 fun StatusBadge(isOverdue: Boolean) {
-    val bgColor = if (isOverdue) OverdueRed.copy(alpha = 0.12f) else TealPrimary.copy(alpha = 0.10f)
+    val bgColor = if (isOverdue) OverdueRed.copy(alpha = 0.10f) else TealPrimary.copy(alpha = 0.08f)
     val textColor = if (isOverdue) OverdueRed else TealPrimary
     val text = if (isOverdue) "Overdue" else "Active"
 

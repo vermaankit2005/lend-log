@@ -2,6 +2,7 @@ package com.lendlog.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,57 +22,66 @@ fun EmptyState(
     onCtaClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(horizontal = 24.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .size(72.dp)
-                .background(
-                    color = TealPrimary.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(12.dp)
-                ),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = TealPrimary,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-
-        if (ctaLabel != null && onCtaClick != null) {
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = onCtaClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TealPrimary
-                )
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(
+                        color = TealPrimary.copy(alpha = 0.10f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Text(ctaLabel)
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = TealPrimary,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            if (ctaLabel != null && onCtaClick != null) {
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = onCtaClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                ) {
+                    Text(ctaLabel)
+                }
             }
         }
     }

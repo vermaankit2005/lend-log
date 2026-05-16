@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.PaddingValues
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,8 +28,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.ui.components.EmptyState
 import com.lendlog.app.ui.components.LoanCard
-import com.lendlog.app.ui.theme.TealDeep
-import com.lendlog.app.ui.theme.TealLight
+import com.lendlog.app.ui.theme.MutedText
 import com.lendlog.app.ui.theme.TealPrimary
 import kotlinx.coroutines.delay
 
@@ -37,8 +37,7 @@ import kotlinx.coroutines.delay
 fun HomeScreen(
     onNavigateToAdd: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToSettings: () -> Unit,
+    bottomPadding: PaddingValues = PaddingValues(),
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -50,17 +49,9 @@ fun HomeScreen(
                 title = {
                     Text(
                         "LendLog",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToHistory) {
-                        Icon(Icons.Outlined.History, contentDescription = "History")
-                    }
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Outlined.Settings, contentDescription = "Settings")
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -83,6 +74,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(bottom = bottomPadding.calculateBottomPadding())
         ) {
             FeedControls(
                 feedView = uiState.feedView,
@@ -92,16 +84,18 @@ fun HomeScreen(
             )
 
             if (uiState.loans.isEmpty()) {
-                EmptyState(
-                    icon = Icons.Outlined.Inventory2,
-                    title = "Nothing lent out",
-                    body = "Tap the + button to log your first loan",
-                    ctaLabel = "Log a loan",
-                    onCtaClick = onNavigateToAdd,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(Alignment.Center)
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyState(
+                        icon = Icons.Outlined.Inventory2,
+                        title = "Nothing lent out",
+                        body = "Tap + to log your first loan",
+                        ctaLabel = "Log a loan",
+                        onCtaClick = onNavigateToAdd
+                    )
+                }
             } else {
                 when (uiState.feedView) {
                     FeedView.BY_ITEM -> ByItemFeed(
@@ -131,7 +125,6 @@ private fun FeedControls(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // View toggle
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -150,19 +143,22 @@ private fun FeedControls(
             )
         }
 
-        // Filter chips
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = filter == FilterType.ALL,
                 onClick = { onFilterChange(FilterType.ALL) },
-                label = { Text("All") }
+                label = { Text("All") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = TealPrimary.copy(alpha = 0.10f),
+                    selectedLabelColor = TealPrimary
+                )
             )
             FilterChip(
                 selected = filter == FilterType.OVERDUE,
                 onClick = { onFilterChange(FilterType.OVERDUE) },
                 label = { Text("Overdue") },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
+                    selectedContainerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.10f),
                     selectedLabelColor = MaterialTheme.colorScheme.error
                 )
             )
@@ -181,7 +177,7 @@ private fun ViewToggleChip(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) TealPrimary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+        color = if (selected) TealPrimary.copy(alpha = 0.10f) else MaterialTheme.colorScheme.surface,
         border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Box(
@@ -193,7 +189,7 @@ private fun ViewToggleChip(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (selected) TealPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (selected) TealPrimary else MutedText
             )
         }
     }
@@ -211,7 +207,7 @@ private fun ByItemFeed(
         itemsIndexed(loans, key = { _, loan -> loan.id }) { index, loan ->
             var visible by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
-                delay(index * 70L)
+                delay(index * 60L)
                 visible = true
             }
             AnimatedVisibility(
@@ -247,7 +243,9 @@ private fun ByPersonFeed(
             item(key = "header_$person") {
                 Text(
                     text = person,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
             }

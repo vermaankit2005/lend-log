@@ -7,12 +7,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.PaddingValues
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,8 +24,8 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    onNavigateBack: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
+    bottomPadding: PaddingValues = PaddingValues(),
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -32,11 +33,12 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("History") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back")
-                    }
+                title = {
+                    Text(
+                        "History",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -45,36 +47,43 @@ fun HistoryScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        if (uiState.loans.isEmpty()) {
-            EmptyState(
-                icon = Icons.Outlined.History,
-                title = "No returned loans yet",
-                body = "Loans you mark as returned will appear here",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .wrapContentSize(Alignment.Center)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(padding),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                itemsIndexed(uiState.loans, key = { _, l -> l.id }) { index, loan ->
-                    var visible by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) {
-                        delay(index * 50L)
-                        visible = true
-                    }
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 })
-                    ) {
-                        LoanCard(
-                            loan = loan,
-                            onClick = { onNavigateToDetail(loan.id) }
-                        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(bottom = bottomPadding.calculateBottomPadding())
+        ) {
+            if (uiState.loans.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyState(
+                        icon = Icons.Outlined.History,
+                        title = "No returned loans yet",
+                        body = "Loans you mark as returned will appear here"
+                    )
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    itemsIndexed(uiState.loans, key = { _, l -> l.id }) { index, loan ->
+                        var visible by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            delay(index * 50L)
+                            visible = true
+                        }
+                        AnimatedVisibility(
+                            visible = visible,
+                            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 })
+                        ) {
+                            LoanCard(
+                                loan = loan,
+                                onClick = { onNavigateToDetail(loan.id) }
+                            )
+                        }
                     }
                 }
             }

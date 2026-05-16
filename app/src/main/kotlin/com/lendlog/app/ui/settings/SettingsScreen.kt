@@ -1,8 +1,8 @@
 package com.lendlog.app.ui.settings
 
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,14 +11,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.PaddingValues
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lendlog.app.BuildConfig
 import com.lendlog.app.ui.theme.MutedText
-import com.lendlog.app.ui.theme.OverdueRed
 import com.lendlog.app.ui.theme.TealPrimary
 import java.text.SimpleDateFormat
 import java.util.*
@@ -26,7 +30,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateBack: () -> Unit,
+    bottomPadding: PaddingValues = PaddingValues(),
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -65,11 +69,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back")
-                    }
+                title = {
+                    Text(
+                        "Settings",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
@@ -83,25 +88,28 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(bottom = bottomPadding.calculateBottomPadding())
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             SettingsSectionHeader("Backup")
+            Spacer(Modifier.height(4.dp))
 
             SettingsCard {
-                val lastBackup = if (uiState.lastBackupTimestamp == 0L) {
-                    "Never backed up"
-                } else {
-                    "Last backup: ${formatDateTime(uiState.lastBackupTimestamp)}"
+                if (uiState.lastBackupTimestamp != 0L) {
+                    Text(
+                        text = "Last backup: ${formatDateTime(uiState.lastBackupTimestamp)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MutedText,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                 }
-                Text(lastBackup, style = MaterialTheme.typography.bodySmall, color = MutedText,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
 
                 SettingsItem(
                     icon = Icons.Outlined.Upload,
+                    iconTint = TealPrimary,
                     title = "Export backup now",
                     subtitle = "Save to Downloads folder",
                     onClick = viewModel::exportNow,
@@ -112,6 +120,7 @@ fun SettingsScreen(
 
                 SettingsItem(
                     icon = Icons.Outlined.Download,
+                    iconTint = TealPrimary,
                     title = "Restore from backup",
                     subtitle = "Pick a lendlog-backup.json file",
                     onClick = { restoreLauncher.launch(arrayOf("application/json", "*/*")) },
@@ -119,12 +128,14 @@ fun SettingsScreen(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
             SettingsSectionHeader("About")
+            Spacer(Modifier.height(4.dp))
 
             SettingsCard {
                 SettingsItem(
                     icon = Icons.Outlined.Info,
+                    iconTint = MutedText,
                     title = "Version",
                     subtitle = BuildConfig.VERSION_NAME,
                     onClick = {}
@@ -139,8 +150,9 @@ private fun SettingsSectionHeader(title: String) {
     Text(
         text = title.uppercase(),
         style = MaterialTheme.typography.labelMedium,
-        color = MutedText,
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+        color = TealPrimary,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
     )
 }
 
@@ -149,6 +161,7 @@ private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(content = content)
@@ -157,7 +170,8 @@ private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun SettingsItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
+    iconTint: androidx.compose.ui.graphics.Color,
     title: String,
     subtitle: String,
     onClick: () -> Unit,
@@ -165,19 +179,41 @@ private fun SettingsItem(
 ) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Icon(icon, contentDescription = null, tint = TealPrimary, modifier = Modifier.size(22.dp))
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(iconTint.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyMedium)
+                Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MutedText)
             }
             if (loading) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = TealPrimary)
+            } else {
+                Icon(
+                    Icons.Outlined.ChevronRight,
+                    contentDescription = null,
+                    tint = MutedText,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
