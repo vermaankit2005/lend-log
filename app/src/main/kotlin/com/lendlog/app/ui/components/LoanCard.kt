@@ -2,30 +2,27 @@ package com.lendlog.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.lendlog.app.data.db.Loan
-import com.lendlog.app.ui.theme.BorderColor
-import com.lendlog.app.ui.theme.MutedText
-import com.lendlog.app.ui.theme.OverdueRed
-import com.lendlog.app.ui.theme.TealPrimary
+import com.lendlog.app.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -36,23 +33,42 @@ fun LoanCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val accentColor by animateColorAsState(
-        targetValue = if (loan.isOverdue) OverdueRed else TealPrimary,
-        animationSpec = tween(200),
-        label = "accentColor"
+    val now = System.currentTimeMillis()
+    val threeDaysMs = 3L * 24 * 60 * 60 * 1000
+    val isDueSoon = !loan.isReturned && !loan.isOverdue && (loan.returnDate - now) < threeDaysMs
+
+    val accentColor = when {
+        loan.isOverdue  -> Danger
+        isDueSoon       -> Warning
+        loan.isReturned -> N300
+        else            -> Ink
+    }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val cardBg by animateColorAsState(
+        targetValue    = if (isPressed) N100 else N0,
+        animationSpec  = tween(100, easing = FastOutLinearInEasing),
+        label          = "cardBg"
     )
+
+    val titleColor    = if (loan.isReturned) N500 else N800
+    val subtitleColor = if (loan.isReturned) N400 else N500
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, BorderColor)
+            .clickable(
+                interactionSource = interactionSource,
+                indication        = null,
+                onClick           = onClick
+            ),
+        shape  = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            // Left accent bar
+            // Left status strip
             Box(
                 modifier = Modifier
                     .width(4.dp)
@@ -60,124 +76,164 @@ fun LoanCard(
                     .background(accentColor)
             )
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 14.dp, vertical = 14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            // Thumbnail
+            if (loan.photoUri != null) {
+                AsyncImage(
+                    model              = loan.photoUri,
+                    contentDescription = null,
+                    contentScale       = ContentScale.Crop,
+                    modifier           = Modifier
+                        .padding(start = 12.dp, top = 12.dp, bottom = 12.dp)
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .padding(start = 12.dp, top = 12.dp, bottom = 12.dp)
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(N100),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = loan.itemName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    StatusBadge(isOverdue = loan.isOverdue)
-                }
-
-                Spacer(Modifier.height(6.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Outlined.AccountCircle,
+                        imageVector        = Icons.Outlined.Inventory2,
                         contentDescription = null,
-                        tint = MutedText,
-                        modifier = Modifier.size(14.dp)
+                        tint               = N400,
+                        modifier           = Modifier.size(24.dp)
                     )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        text = loan.borrowerName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MutedText
-                    )
-                }
-
-                Spacer(Modifier.height(3.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Outlined.CalendarMonth,
-                        contentDescription = null,
-                        tint = if (loan.isOverdue) OverdueRed else MutedText,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    val label = if (loan.isOverdue) "Due" else "Return by"
-                    Text(
-                        text = "$label ${formatDate(loan.returnDate)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (loan.isOverdue) OverdueRed else MutedText
-                    )
-                }
-
-                if (loan.tagList.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        loan.tagList.take(3).forEach { tag ->
-                            TagChip(tag = tag)
-                        }
-                    }
                 }
             }
 
-            if (loan.photoUri != null) {
-                AsyncImage(
-                    model = loan.photoUri,
-                    contentDescription = loan.itemName,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .padding(10.dp)
-                        .clip(RoundedCornerShape(8.dp))
+            // Text column
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 14.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(
+                    modifier              = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment     = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text      = loan.itemName,
+                        style     = MaterialTheme.typography.titleLarge,
+                        color     = titleColor,
+                        maxLines  = 1,
+                        overflow  = TextOverflow.Ellipsis,
+                        modifier  = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    LoanStatusBadge(
+                        isOverdue  = loan.isOverdue,
+                        isDueSoon  = isDueSoon,
+                        isReturned = loan.isReturned
+                    )
+                }
+
+                Text(
+                    text     = "Lent to ${loan.borrowerName}",
+                    style    = MaterialTheme.typography.bodyMedium,
+                    color    = subtitleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
+                DueDateRow(loan = loan, isDueSoon = isDueSoon, accentColor = accentColor)
+
+                if (loan.tagList.isNotEmpty()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        loan.tagList.take(3).forEach { tag -> TagChip(tag = tag) }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun StatusBadge(isOverdue: Boolean) {
-    val bgColor = if (isOverdue) OverdueRed.copy(alpha = 0.10f) else TealPrimary.copy(alpha = 0.08f)
-    val textColor = if (isOverdue) OverdueRed else TealPrimary
-    val text = if (isOverdue) "Overdue" else "Active"
+private fun DueDateRow(loan: Loan, isDueSoon: Boolean, accentColor: androidx.compose.ui.graphics.Color) {
+    val now     = System.currentTimeMillis()
+    val daysDiff = ((loan.returnDate - now) / (1000L * 60 * 60 * 24)).toInt()
+    val absDate = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(loan.returnDate))
 
-    Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(999.dp)
-    ) {
+    val relativeText = when {
+        loan.isReturned -> null
+        loan.isOverdue  -> "Overdue ${-daysDiff} day${if (-daysDiff != 1) "s" else ""}"
+        isDueSoon && daysDiff == 0 -> "Due today"
+        isDueSoon       -> "Due in ${daysDiff + 1} day${if (daysDiff + 1 != 1) "s" else ""}"
+        else            -> null
+    }
+    val dotColor = if (loan.isReturned) N300 else accentColor
+    val textColor = if (loan.isReturned) N400 else accentColor
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .background(dotColor, CircleShape)
+        )
+        Spacer(Modifier.width(6.dp))
+        if (relativeText != null) {
+            Text(
+                text                = relativeText,
+                style               = MaterialTheme.typography.labelMedium,
+                color               = textColor,
+                fontFeatureSettings = "tnum"
+            )
+            Text(
+                text                = " · $absDate",
+                style               = MaterialTheme.typography.bodySmall,
+                color               = N400,
+                fontFeatureSettings = "tnum"
+            )
+        } else {
+            Text(
+                text                = absDate,
+                style               = MaterialTheme.typography.labelMedium,
+                color               = if (loan.isReturned) N400 else N500,
+                fontFeatureSettings = "tnum"
+            )
+        }
+    }
+}
+
+@Composable
+fun LoanStatusBadge(
+    isOverdue: Boolean,
+    isDueSoon: Boolean = false,
+    isReturned: Boolean = false
+) {
+    val (bg, textColor, label) = when {
+        isReturned -> Triple(N100, N500, "Returned")
+        isOverdue  -> Triple(DangerSoft, Danger, "Overdue")
+        isDueSoon  -> Triple(WarningSoft, Warning, "Soon")
+        else       -> Triple(InkSoft, Ink, "Active")
+    }
+    Surface(color = bg, shape = RoundedCornerShape(999.dp)) {
         Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            color = textColor,
+            text     = label,
+            style    = MaterialTheme.typography.labelMedium,
+            color    = textColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
         )
     }
 }
 
+// Keep old name for callsites in LoanDetailScreen
+@Composable
+fun StatusBadge(isOverdue: Boolean) = LoanStatusBadge(isOverdue = isOverdue)
+
 @Composable
 fun TagChip(tag: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        shape = RoundedCornerShape(999.dp)
-    ) {
+    Surface(color = N100, shape = RoundedCornerShape(999.dp)) {
         Text(
-            text = tag,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+            text     = tag,
+            style    = MaterialTheme.typography.labelSmall,
+            color    = N700,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
         )
     }
-}
-
-private fun formatDate(epochMillis: Long): String {
-    val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-    return sdf.format(Date(epochMillis))
 }

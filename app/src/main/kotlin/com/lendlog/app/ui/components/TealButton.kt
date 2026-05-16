@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.lendlog.app.ui.theme.Ink
 import com.lendlog.app.ui.theme.LendLogTypography
-import com.lendlog.app.ui.theme.TealPrimary
 
 @Composable
 fun TealGradientButton(
@@ -18,19 +18,19 @@ fun TealGradientButton(
     enabled: Boolean = true
 ) {
     Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(50.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = TealPrimary,
-            disabledContainerColor = TealPrimary.copy(alpha = 0.38f),
-            contentColor = Color.White,
-            disabledContentColor = Color.White.copy(alpha = 0.6f)
+        onClick  = onClick,
+        enabled  = enabled,
+        modifier = modifier.height(52.dp),
+        shape    = RoundedCornerShape(12.dp),
+        colors   = ButtonDefaults.buttonColors(
+            containerColor         = Ink,
+            disabledContainerColor = Ink.copy(alpha = 0.38f),
+            contentColor           = Color.White,
+            disabledContentColor   = Color.White.copy(alpha = 0.5f)
         )
     ) {
         Text(
-            text = text,
+            text  = text,
             style = LendLogTypography.labelLarge,
             color = Color.White
         )

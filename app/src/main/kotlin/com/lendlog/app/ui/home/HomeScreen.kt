@@ -5,12 +5,10 @@ import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -28,8 +26,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.ui.components.EmptyState
 import com.lendlog.app.ui.components.LoanCard
-import com.lendlog.app.ui.theme.MutedText
-import com.lendlog.app.ui.theme.TealPrimary
+import com.lendlog.app.ui.theme.*
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -47,36 +44,33 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            "LendLog",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            "Track what you've lent",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        "Loans",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = N800
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = N50
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToAdd,
-                containerColor = TealPrimary,
+                containerColor = Ink,
                 contentColor = Color.White,
-                shape = CircleShape
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 2.dp
+                )
             ) {
                 Icon(Icons.Outlined.Add, contentDescription = "Add Loan", modifier = Modifier.size(26.dp))
             }
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = N50
     ) { padding ->
         Column(
             modifier = Modifier
@@ -84,12 +78,21 @@ fun HomeScreen(
                 .padding(padding)
                 .padding(bottom = bottomPadding.calculateBottomPadding())
         ) {
-            FeedControls(
+            // View toggle
+            FeedToggle(
                 feedView = uiState.feedView,
-                filter = uiState.filter,
-                onFeedViewChange = viewModel::setFeedView,
-                onFilterChange = viewModel::setFilter
+                onFeedViewChange = viewModel::setFeedView
             )
+
+            // Summary + overdue filter
+            if (uiState.loans.isNotEmpty()) {
+                SummaryRow(
+                    totalCount = uiState.loans.size,
+                    overdueCount = uiState.loans.count { it.isOverdue },
+                    filter = uiState.filter,
+                    onFilterChange = viewModel::setFilter
+                )
+            }
 
             if (uiState.loans.isEmpty()) {
                 Box(
@@ -98,9 +101,9 @@ fun HomeScreen(
                 ) {
                     EmptyState(
                         icon = Icons.Outlined.Inventory2,
-                        title = "Nothing lent out",
-                        body = "Tap + to log your first loan",
-                        ctaLabel = "Log a loan",
+                        title = "No active loans",
+                        body = "When you lend something, it'll show up here so you don't forget.",
+                        ctaLabel = "Add a loan",
                         onCtaClick = onNavigateToAdd
                     )
                 }
@@ -121,53 +124,86 @@ fun HomeScreen(
 }
 
 @Composable
-private fun FeedControls(
+private fun FeedToggle(
     feedView: FeedView,
-    filter: FilterType,
-    onFeedViewChange: (FeedView) -> Unit,
-    onFilterChange: (FilterType) -> Unit
+    onFeedViewChange: (FeedView) -> Unit
 ) {
-    Column(
+    SingleChoiceSegmentedButtonRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        SegmentedButton(
+            selected = feedView == FeedView.BY_ITEM,
+            onClick = { onFeedViewChange(FeedView.BY_ITEM) },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+            colors = SegmentedButtonDefaults.colors(
+                activeContainerColor = InkSoft,
+                activeContentColor = Ink,
+                activeBorderColor = Ink
+            ),
+            icon = {}
         ) {
-            ViewToggleChip(
-                label = "By Item",
-                selected = feedView == FeedView.BY_ITEM,
-                onClick = { onFeedViewChange(FeedView.BY_ITEM) },
-                modifier = Modifier.weight(1f)
+            Text("By Item", style = MaterialTheme.typography.labelLarge)
+        }
+        SegmentedButton(
+            selected = feedView == FeedView.BY_PERSON,
+            onClick = { onFeedViewChange(FeedView.BY_PERSON) },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+            colors = SegmentedButtonDefaults.colors(
+                activeContainerColor = InkSoft,
+                activeContentColor = Ink,
+                activeBorderColor = Ink
+            ),
+            icon = {}
+        ) {
+            Text("By Person", style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    totalCount: Int,
+    overdueCount: Int,
+    filter: FilterType,
+    onFilterChange: (FilterType) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = "$totalCount active",
+                style = MaterialTheme.typography.bodyMedium,
+                color = N500
             )
-            ViewToggleChip(
-                label = "By Person",
-                selected = feedView == FeedView.BY_PERSON,
-                onClick = { onFeedViewChange(FeedView.BY_PERSON) },
-                modifier = Modifier.weight(1f)
-            )
+            if (overdueCount > 0) {
+                Text("·", style = MaterialTheme.typography.bodyMedium, color = N400)
+                Text(
+                    text = "$overdueCount overdue",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Danger,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = filter == FilterType.ALL,
-                onClick = { onFilterChange(FilterType.ALL) },
-                label = { Text("All") },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = TealPrimary.copy(alpha = 0.10f),
-                    selectedLabelColor = TealPrimary
-                )
-            )
+        if (overdueCount > 0) {
             FilterChip(
                 selected = filter == FilterType.OVERDUE,
-                onClick = { onFilterChange(FilterType.OVERDUE) },
-                label = { Text("Overdue") },
+                onClick = {
+                    onFilterChange(if (filter == FilterType.OVERDUE) FilterType.ALL else FilterType.OVERDUE)
+                },
+                label = { Text("Overdue only", style = MaterialTheme.typography.labelMedium) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.10f),
-                    selectedLabelColor = MaterialTheme.colorScheme.error
+                    selectedContainerColor = DangerSoft,
+                    selectedLabelColor = Danger
                 )
             )
         }
@@ -175,56 +211,48 @@ private fun FeedControls(
 }
 
 @Composable
-private fun ViewToggleChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = if (selected) TealPrimary.copy(alpha = 0.10f) else MaterialTheme.colorScheme.surface,
-        border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (selected) TealPrimary else MutedText
-            )
-        }
-    }
-}
-
-@Composable
-private fun ByItemFeed(
-    loans: List<Loan>,
-    onLoanClick: (String) -> Unit
-) {
+private fun ByItemFeed(loans: List<Loan>, onLoanClick: (String) -> Unit) {
     LazyColumn(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp, ),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         itemsIndexed(loans, key = { _, loan -> loan.id }) { index, loan ->
             var visible by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
-                delay(index * 60L)
+                delay(minOf(index * 40L, 240L))
                 visible = true
             }
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 })
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 })
             ) {
                 LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
             }
         }
+        item { Spacer(Modifier.height(80.dp)) }
+    }
+}
+
+@Composable
+private fun ByPersonFeed(grouped: Map<String, List<Loan>>, onLoanClick: (String) -> Unit) {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        grouped.forEach { (person, loans) ->
+            item(key = "header_$person") {
+                Text(
+                    text = person.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = N500,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                )
+            }
+            itemsIndexed(loans, key = { _, loan -> loan.id }) { _, loan ->
+                LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
+            }
+        }
+        item { Spacer(Modifier.height(80.dp)) }
     }
 }
 
@@ -235,31 +263,5 @@ private fun RequestNotificationPermission() {
     val permission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
     LaunchedEffect(Unit) {
         if (!permission.status.isGranted) permission.launchPermissionRequest()
-    }
-}
-
-@Composable
-private fun ByPersonFeed(
-    grouped: Map<String, List<Loan>>,
-    onLoanClick: (String) -> Unit
-) {
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        grouped.forEach { (person, loans) ->
-            item(key = "header_$person") {
-                Text(
-                    text = person,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                )
-            }
-            itemsIndexed(loans, key = { _, loan -> loan.id }) { _, loan ->
-                LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
-            }
-        }
     }
 }

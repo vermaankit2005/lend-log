@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.lendlog.app.ui.theme.TealPrimary
+import com.lendlog.app.ui.theme.*
 
 @Composable
 fun EmptyState(
@@ -22,66 +22,55 @@ fun EmptyState(
     onCtaClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .size(64.dp)
+                .background(N100, CircleShape),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .background(
-                        color = TealPrimary.copy(alpha = 0.10f),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+            Icon(
+                imageVector        = icon,
+                contentDescription = null,
+                tint               = N500,
+                modifier           = Modifier.size(28.dp)
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        Text(
+            text      = title,
+            style     = MaterialTheme.typography.headlineSmall,
+            color     = N800,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Text(
+            text      = body,
+            style     = MaterialTheme.typography.bodyMedium,
+            color     = N500,
+            textAlign = TextAlign.Center,
+            modifier  = Modifier.widthIn(max = 260.dp)
+        )
+
+        if (ctaLabel != null && onCtaClick != null) {
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = onCtaClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape    = RoundedCornerShape(12.dp),
+                colors   = ButtonDefaults.buttonColors(containerColor = Ink)
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = TealPrimary,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = body,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            if (ctaLabel != null && onCtaClick != null) {
-                Spacer(Modifier.height(24.dp))
-                Button(
-                    onClick = onCtaClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
-                ) {
-                    Text(ctaLabel)
-                }
+                Text(ctaLabel, style = MaterialTheme.typography.labelLarge)
             }
         }
     }

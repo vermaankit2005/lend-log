@@ -21,11 +21,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.lendlog.app.data.db.Loan
-import com.lendlog.app.ui.components.StatusBadge
+import com.lendlog.app.ui.components.LoanStatusBadge
 import com.lendlog.app.ui.components.TagChip
-import com.lendlog.app.ui.theme.MutedText
-import com.lendlog.app.ui.theme.OverdueRed
-import com.lendlog.app.ui.theme.TealPrimary
+import com.lendlog.app.ui.theme.*
 import com.lendlog.app.util.WhatsAppHelper
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,6 +37,7 @@ fun LoanDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.deleted) {
         if (uiState.deleted) onNavigateBack()
@@ -47,68 +46,87 @@ fun LoanDetailScreen(
     if (uiState.showDeleteDialog) {
         AlertDialog(
             onDismissRequest = viewModel::dismissDeleteDialog,
-            title = { Text("Delete this loan?") },
-            text = { Text("This will permanently remove the loan record. This cannot be undone.") },
+            title = { Text("Delete this loan?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) },
+            text = { Text("This permanently removes the loan record and cannot be undone.", style = MaterialTheme.typography.bodyMedium, color = N500) },
             confirmButton = {
                 TextButton(
                     onClick = viewModel::deleteLoan,
-                    colors = ButtonDefaults.textButtonColors(contentColor = OverdueRed)
-                ) { Text("Delete") }
+                    colors = ButtonDefaults.textButtonColors(contentColor = Danger)
+                ) { Text("Delete", fontWeight = FontWeight.SemiBold) }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissDeleteDialog) { Text("Cancel") }
             },
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            containerColor = N0
         )
     }
 
     if (uiState.showReturnDialog) {
         AlertDialog(
             onDismissRequest = viewModel::dismissReturnDialog,
-            title = { Text("Mark as returned?") },
-            text = { Text("This will move the loan to your history.") },
+            title = { Text("Mark as returned?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) },
+            text = { Text("This moves the loan to your history.", style = MaterialTheme.typography.bodyMedium, color = N500) },
             confirmButton = {
                 TextButton(
                     onClick = viewModel::markReturned,
-                    colors = ButtonDefaults.textButtonColors(contentColor = TealPrimary)
-                ) { Text("Confirm") }
+                    colors = ButtonDefaults.textButtonColors(contentColor = Ink)
+                ) { Text("Confirm", fontWeight = FontWeight.SemiBold) }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissReturnDialog) { Text("Cancel") }
             },
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            containerColor = N0
         )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Loan Details") },
+                title = { },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
                     }
                 },
                 actions = {
-                    IconButton(onClick = viewModel::showDeleteDialog) {
-                        Icon(
-                            Icons.Outlined.Delete,
-                            contentDescription = "Delete",
-                            tint = OverdueRed
-                        )
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Outlined.MoreVert, contentDescription = "More", tint = N600)
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            containerColor = N0
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Delete loan", color = Danger, style = MaterialTheme.typography.bodyMedium) },
+                                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = Danger, modifier = Modifier.size(18.dp)) },
+                                onClick = { showMenu = false; viewModel.showDeleteDialog() }
+                            )
+                        }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = N50
     ) { padding ->
         val loan = uiState.loan
         if (loan == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = TealPrimary)
+            // Skeleton
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SkeletonBox(height = 220.dp, radius = 12.dp)
+                SkeletonBox(height = 32.dp, fraction = 0.6f, radius = 8.dp)
+                SkeletonBox(height = 120.dp, radius = 12.dp)
+                SkeletonBox(height = 52.dp, radius = 12.dp)
             }
         } else {
             Column(
@@ -116,8 +134,8 @@ fun LoanDetailScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 loan.photoUri?.let { uri ->
                     AsyncImage(
@@ -131,125 +149,126 @@ fun LoanDetailScreen(
                     )
                 }
 
+                // Headline row
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = loan.itemName,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f)
+                        color = N800,
+                        modifier = Modifier.weight(1f).padding(end = 12.dp)
                     )
-                    if (loan.isReturned) {
+                    LoanStatusBadge(isOverdue = loan.isOverdue, isReturned = loan.isReturned)
+                }
+
+                // Info card
+                DetailCard(loan = loan)
+
+                // Notes
+                if (!loan.notes.isNullOrBlank()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        EyebrowLabel("NOTES")
                         Surface(
-                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(999.dp)
+                            color = N0,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                "Returned",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                text = loan.notes,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = N700,
+                                modifier = Modifier.padding(16.dp)
                             )
-                        }
-                    } else {
-                        StatusBadge(isOverdue = loan.isOverdue)
-                    }
-                }
-
-                DetailInfoCard(loan = loan)
-
-                if (loan.notes != null) {
-                    Card(
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text(
-                                "Notes",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MutedText
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(loan.notes, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
 
+                // Tags
                 if (loan.tagList.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         loan.tagList.forEach { TagChip(it) }
                     }
                 }
 
+                Spacer(Modifier.height(8.dp))
+
+                // Actions
                 if (!loan.isReturned) {
                     loan.borrowerPhone?.let { phone ->
                         OutlinedButton(
                             onClick = { WhatsAppHelper.sendNudge(context, phone, loan.itemName) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TealPrimary)
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Ink),
+                            border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp)
                         ) {
                             Icon(Icons.Outlined.Chat, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Nudge via WhatsApp")
+                            Text("Send a nudge", style = MaterialTheme.typography.labelLarge)
                         }
                     }
 
                     Button(
                         onClick = viewModel::showReturnDialog,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                        colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Color.White),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
                     ) {
                         Icon(Icons.Outlined.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Mark as Returned")
+                        Text("Mark as Returned", style = MaterialTheme.typography.labelLarge)
                     }
                 }
+
+                Spacer(Modifier.height(16.dp))
             }
         }
     }
 }
 
 @Composable
-private fun DetailInfoCard(loan: Loan) {
-    Card(
+private fun EyebrowLabel(text: String) {
+    Text(text = text, style = MaterialTheme.typography.labelSmall, color = N500)
+}
+
+@Composable
+private fun DetailCard(loan: Loan) {
+    Surface(
+        color = N0,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
             DetailRow(
                 icon = Icons.Outlined.Person,
-                label = "Borrower",
+                label = "BORROWER",
                 value = loan.borrowerName
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+            HorizontalDivider(color = N100, thickness = 1.dp, modifier = Modifier.padding(start = 56.dp))
             DetailRow(
                 icon = Icons.Outlined.CalendarMonth,
-                label = "Lent on",
+                label = "LENT ON",
                 value = formatDate(loan.lentDate)
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+            HorizontalDivider(color = N100, thickness = 1.dp, modifier = Modifier.padding(start = 56.dp))
             DetailRow(
                 icon = Icons.Outlined.Event,
-                label = "Due on",
+                label = "DUE ON",
                 value = formatDate(loan.returnDate),
-                valueColor = if (loan.isOverdue) OverdueRed else null
+                valueColor = if (loan.isOverdue && !loan.isReturned) Danger else null
             )
             if (loan.returnedDate != null) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                HorizontalDivider(color = N100, thickness = 1.dp, modifier = Modifier.padding(start = 56.dp))
                 DetailRow(
                     icon = Icons.Outlined.CheckCircle,
-                    label = "Returned on",
+                    label = "RETURNED ON",
                     value = formatDate(loan.returnedDate),
-                    valueColor = MaterialTheme.colorScheme.tertiary
+                    valueColor = Success
                 )
             }
         }
@@ -263,26 +282,40 @@ private fun DetailRow(
     value: String,
     valueColor: Color? = null
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Box(
             modifier = Modifier
-                .size(36.dp)
-                .background(TealPrimary.copy(alpha = 0.08f), RoundedCornerShape(8.dp)),
+                .size(28.dp)
+                .background(N100, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = TealPrimary, modifier = Modifier.size(18.dp))
+            Icon(icon, contentDescription = null, tint = N500, modifier = Modifier.size(16.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MutedText)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = N500)
+            Spacer(Modifier.height(2.dp))
             Text(
                 value,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = valueColor ?: MaterialTheme.colorScheme.onSurface
+                color = valueColor ?: N800
             )
         }
     }
+}
+
+@Composable
+private fun SkeletonBox(height: androidx.compose.ui.unit.Dp, fraction: Float = 1f, radius: androidx.compose.ui.unit.Dp = 8.dp) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(fraction)
+            .height(height)
+            .background(N100, RoundedCornerShape(radius))
+    )
 }
 
 private fun formatDate(epochMillis: Long): String =

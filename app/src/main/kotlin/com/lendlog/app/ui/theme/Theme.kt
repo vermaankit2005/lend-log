@@ -5,32 +5,37 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val LendLogColorScheme = lightColorScheme(
-    primary = TealPrimary,
-    onPrimary = CardSurface,
-    primaryContainer = TealLight.copy(alpha = 0.15f),
-    onPrimaryContainer = TealDeep,
-    secondary = SandSecondary,
-    onSecondary = CharcoalText,
-    secondaryContainer = AccentAmber,
-    onSecondaryContainer = CharcoalText,
-    tertiary = SuccessGreen,
-    onTertiary = CardSurface,
-    background = WarmBackground,
-    onBackground = CharcoalText,
-    surface = CardSurface,
-    onSurface = CharcoalText,
-    surfaceVariant = SandSecondary,
-    onSurfaceVariant = MutedText,
-    outline = BorderColor,
-    error = OverdueRed,
-    onError = CardSurface,
+    primary             = Ink,
+    onPrimary           = N0,
+    primaryContainer    = InkSoft,
+    onPrimaryContainer  = Ink,
+    secondary           = N100,
+    onSecondary         = N800,
+    secondaryContainer  = N100,
+    onSecondaryContainer = N700,
+    tertiary            = Success,
+    onTertiary          = N0,
+    tertiaryContainer   = SuccessSoft,
+    onTertiaryContainer = Success,
+    background          = N50,
+    onBackground        = N800,
+    surface             = N0,
+    onSurface           = N800,
+    surfaceVariant      = N100,
+    onSurfaceVariant    = N500,
+    outline             = N200,
+    outlineVariant      = N200,
+    error               = Danger,
+    onError             = N0,
+    errorContainer      = DangerSoft,
+    onErrorContainer    = Danger,
 )
 
 @Composable
 fun LendLogTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LendLogColorScheme,
-        typography = LendLogTypography,
-        content = content
+        typography  = LendLogTypography,
+        content     = content
     )
 }
