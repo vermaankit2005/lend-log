@@ -32,18 +32,22 @@ object ContactPickerHelper {
         }
 
         contactId?.let { id ->
-            context.contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
-                "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
-                arrayOf(id),
-                null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    phone = cursor.getString(
-                        cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
-                    )
+            try {
+                context.contentResolver.query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                    "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+                    arrayOf(id),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        phone = cursor.getString(
+                            cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        )
+                    }
                 }
+            } catch (_: SecurityException) {
+                // READ_CONTACTS not granted; phone stays null, name is still usable
             }
         }
 

@@ -74,13 +74,23 @@ fun AddLoanScreen(
         uri?.let { viewModel.updatePhotoUri(it.toString()) }
     }
 
-    // Contact picker
+    // Contact picker — READ_CONTACTS needed for phone number lookup
+    val contactsPermission = rememberPermissionState(Manifest.permission.READ_CONTACTS)
+    var pendingContactPick by remember { mutableStateOf(false) }
+
     val contactLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact()
     ) { uri: Uri? ->
         uri?.let { contactUri ->
             val (name, phone, contactId) = ContactPickerHelper.resolveContact(context, contactUri)
             if (name != null) viewModel.updateBorrower(name, contactId, phone)
+        }
+    }
+
+    LaunchedEffect(contactsPermission.status.isGranted, pendingContactPick) {
+        if (pendingContactPick && contactsPermission.status.isGranted) {
+            pendingContactPick = false
+            contactLauncher.launch(null)
         }
     }
 
@@ -160,7 +170,14 @@ fun AddLoanScreen(
             SectionLabel("Borrower *")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
-                    onClick = { contactLauncher.launch(null) },
+                    onClick = {
+                        if (contactsPermission.status.isGranted) {
+                            contactLauncher.launch(null)
+                        } else {
+                            pendingContactPick = true
+                            contactsPermission.launchPermissionRequest()
+                        }
+                    },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.weight(1f)
                 ) {
