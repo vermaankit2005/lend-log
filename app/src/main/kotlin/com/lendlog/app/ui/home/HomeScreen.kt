@@ -3,6 +3,7 @@ package com.lendlog.app.ui.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -175,7 +176,7 @@ private fun ViewToggleChip(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
         color = if (selected) TealPrimary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
-        border = if (selected) null else ButtonDefaults.outlinedButtonBorder
+        border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Box(
             modifier = Modifier

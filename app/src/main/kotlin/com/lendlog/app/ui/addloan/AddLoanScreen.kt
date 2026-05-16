@@ -276,12 +276,7 @@ private fun PhotoSection(
                     onClick = onTakePhoto,
                     modifier = Modifier.weight(1f)
                 )
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(1.dp),
-                    color = BorderColor
-                )
+                VerticalDivider(color = BorderColor)
                 PhotoButton(
                     icon = Icons.Outlined.PhotoLibrary,
                     label = "Gallery",
