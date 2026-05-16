@@ -4,10 +4,15 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import android.os.Environment
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
 import com.lendlog.app.worker.NightlyBackupWorker
 import dagger.hilt.android.HiltAndroidApp
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -22,9 +27,34 @@ class LendLogApp : Application(), Configuration.Provider {
             .build()
 
     override fun onCreate() {
+        installCrashLogger()
         super.onCreate()
         createNotificationChannels()
         scheduleNightlyBackup()
+    }
+
+    private fun installCrashLogger() {
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                val log = buildString {
+                    appendLine("=== LendLog Crash Log $timestamp ===")
+                    appendLine("Thread: ${thread.name}")
+                    appendLine()
+                    appendLine(throwable.stackTraceToString())
+                    var cause = throwable.cause
+                    while (cause != null) {
+                        appendLine("Caused by:")
+                        appendLine(cause.stackTraceToString())
+                        cause = cause.cause
+                    }
+                }
+                val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                File(dir, "lendlog-crash-$timestamp.txt").writeText(log)
+            } catch (_: Exception) {}
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
     }
 
     private fun createNotificationChannels() {
