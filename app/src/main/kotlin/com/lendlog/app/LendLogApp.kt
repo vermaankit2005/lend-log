@@ -3,7 +3,9 @@ package com.lendlog.app
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentValues
 import android.os.Build
+import android.provider.MediaStore
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
 import com.lendlog.app.worker.NightlyBackupWorker
@@ -49,8 +51,27 @@ class LendLogApp : Application(), Configuration.Provider {
                         cause = cause.cause
                     }
                 }
-                val dir = getExternalFilesDir(null) ?: filesDir
-                File(dir, "lendlog-crash-$timestamp.txt").writeText(log)
+                val fileName = "lendlog-crash-$timestamp.txt"
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val values = ContentValues().apply {
+                        put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                        put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+                        put(MediaStore.Downloads.IS_PENDING, 1)
+                    }
+                    val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                    if (uri != null) {
+                        contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(log) }
+                        values.clear()
+                        values.put(MediaStore.Downloads.IS_PENDING, 0)
+                        contentResolver.update(uri, values, null, null)
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    val dir = android.os.Environment.getExternalStoragePublicDirectory(
+                        android.os.Environment.DIRECTORY_DOWNLOADS
+                    )
+                    File(dir, fileName).writeText(log)
+                }
             } catch (_: Exception) {}
             defaultHandler?.uncaughtException(thread, throwable)
         }
