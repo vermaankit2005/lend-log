@@ -40,7 +40,7 @@ lend-log/
 | Navigation | Navigation Compose |
 | Camera | CameraX |
 | Contacts | ContactsContract |
-| Notifications | WorkManager + NotificationManager |
+| Notifications + Backup scheduling | WorkManager + NotificationManager |
 | Billing | Google Play Billing Library v6+ |
 | DI | Hilt |
 | Image loading | Coil |
@@ -61,6 +61,57 @@ lend-log/
 10. **Nudge = WhatsApp** pre-filled message. Graceful fallback if not installed.
 11. **Notifications:** 3-day pre-warning + overdue alert. Both local, no server.
 12. **Returned loans** go to a History tab — never deleted.
+13. **Dual-layer backup** — Android Auto Backup (silent/automatic) + nightly local export to Downloads (fully offline). See Backup Strategy below.
+
+---
+
+## Backup Strategy
+
+Two layers, both automatic. The user never has to think about it.
+
+### Layer 1 — Android Auto Backup (silent safety net)
+- Built into Android 6+. Zero extra code beyond a config XML.
+- Android quietly copies the database, DataStore, and photo files to the user's Google Drive backup quota (does not count against their 15 GB).
+- Restores automatically when the app is reinstalled on the same Google account.
+- Requires a Google account — which every Play Store user has.
+- Data leaves the phone and goes to Google's servers. Acceptable trade-off for the vast majority of users.
+
+**Config required:**
+```xml
+<!-- AndroidManifest.xml -->
+android:allowBackup="true"
+android:dataExtractionRules="@xml/backup_rules"
+```
+```xml
+<!-- res/xml/backup_rules.xml -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="loans.db" />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="loan_photos/" />
+    </cloud-backup>
+</data-extraction-rules>
+```
+
+### Layer 2 — Automatic nightly local export (truly offline)
+- WorkManager runs a nightly job (when idle + charging) that exports all loans to a `lendlog-backup.json` file in the device's `Downloads` folder.
+- This file survives uninstall because it lives in shared storage, not app-private storage.
+- On reinstall, user can tap "Restore from backup" in Settings and pick the file.
+- 100% local. Nothing leaves the phone. Works with no Google account.
+
+**Settings screen actions:**
+- "Restore from backup" — file picker → import JSON → repopulate Room DB
+- "Export now" — manual trigger of the same export job (for power users)
+
+### Why both?
+
+| Scenario | Layer 1 handles it | Layer 2 handles it |
+|---|---|---|
+| Accidental uninstall, same Google account | ✅ | ✅ |
+| New phone, same Google account | ✅ | ✅ |
+| No Google account / de-Googled phone | ❌ | ✅ |
+| Google account changed | ❌ | ✅ |
+| User wants a local copy they can inspect | ❌ | ✅ |
 
 ---
 
@@ -73,6 +124,7 @@ lend-log/
 | Loan Detail | `detail/{id}` | Not built |
 | History | `history` | Not built |
 | Paywall Sheet | bottom sheet | Not built |
+| Settings | `settings` | Not built |
 
 ---
 
@@ -134,7 +186,8 @@ UI (Composables)
   └── ViewModel (StateFlow<UiState>)
         └── Repository
               ├── LoanDao (Room)
-              └── DataStore
+              ├── DataStore
+              └── BackupManager (WorkManager jobs)
 ```
 
 - One ViewModel per screen
@@ -151,6 +204,7 @@ UI (Composables)
 <uses-permission android:name="android.permission.CAMERA" />
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 <!-- FileProvider for photo URIs -->
+<!-- No extra permission needed for Downloads folder on Android 10+ -->
 ```
 
 All permissions are **runtime-requested** with graceful fallback if denied.
@@ -163,6 +217,7 @@ All permissions are **runtime-requested** with graceful fallback if denied.
 - [x] Product blueprint written (`docs/product-blueprint.md`)
 - [x] Design system documented (`docs/design-blueprint.md` — from Travel Pack Pal)
 - [x] Tech stack decided: Kotlin + Jetpack Compose
+- [x] Backup strategy decided: Android Auto Backup + nightly local export
 - [x] This CLAUDE.md created
 
 ## What Needs to Be Built
@@ -174,8 +229,11 @@ All permissions are **runtime-requested** with graceful fallback if denied.
 - [ ] Add Loan screen
 - [ ] Loan Detail screen
 - [ ] History screen
+- [ ] Settings screen (Export now / Restore from backup)
 - [ ] Paywall bottom sheet
-- [ ] WorkManager notification scheduling
+- [ ] WorkManager — notification scheduling (3-day warning + overdue)
+- [ ] WorkManager — nightly backup job (export to Downloads)
+- [ ] Android Auto Backup config XML
 - [ ] WhatsApp nudge intent
 - [ ] Contacts picker + manual fallback
 - [ ] CameraX photo capture

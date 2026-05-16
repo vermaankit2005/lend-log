@@ -27,7 +27,7 @@ Target market: anyone with friends. Replaces the Notes-app hack everyone current
 | Navigation | Navigation Compose | Type-safe screen routing |
 | Camera | CameraX | Jetpack camera library |
 | Contacts | ContactsContract (Android API) | Standard contacts ContentProvider |
-| Notifications | WorkManager + NotificationManager | Scheduled local push notifications |
+| Notifications + Backup scheduling | WorkManager + NotificationManager | Scheduled local jobs |
 | Billing | Google Play Billing Library v6+ | One-time purchase unlock |
 | DI | Hilt | Jetpack-native dependency injection |
 | Image loading | Coil | Kotlin-first, Compose-compatible |
@@ -86,7 +86,7 @@ Target market: anyone with friends. Replaces the Notes-app hack everyone current
 
 - Each active loan card has a nudge button
 - Opens **WhatsApp** with a pre-filled message to the borrower
-- Example: _"Hey! Just a reminder — you still have my [item name]. Would love to get it back soon 😊"
+- Example: _"Hey! Just a reminder — you still have my [item name]. Would love to get it back soon 😊"_
 - Graceful fallback if WhatsApp is not installed (show toast)
 
 ### Monetisation
@@ -103,6 +103,62 @@ Target market: anyone with friends. Replaces the Notes-app hack everyone current
 
 ---
 
+## Data Persistence & Backup
+
+Two automatic layers. The user never has to think about backup.
+
+### Layer 1 — Android Auto Backup (silent safety net)
+
+- Android's built-in system, available on every Android 6+ device
+- Silently copies the Room database, DataStore prefs, and photo files to the user's Google Drive backup quota
+- Does **not** count against the user's 15 GB Google Drive storage
+- Restores automatically when the app is reinstalled on the same Google account
+- Zero extra code — just a config XML in the manifest
+- Data goes to Google's servers (acceptable for the 99% of users on a Google account)
+
+```xml
+<!-- AndroidManifest.xml -->
+android:allowBackup="true"
+android:dataExtractionRules="@xml/backup_rules"
+```
+```xml
+<!-- res/xml/backup_rules.xml -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="loans.db" />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="loan_photos/" />
+    </cloud-backup>
+</data-extraction-rules>
+```
+
+### Layer 2 — Automatic nightly local export (100% offline)
+
+- WorkManager job runs nightly when the phone is idle and charging
+- Exports all loans to `lendlog-backup.json` in the device's `Downloads` folder
+- `Downloads` is shared storage — the file survives uninstall
+- On reinstall, user taps "Restore from backup" in Settings and picks the file
+- Nothing leaves the phone. Works with zero Google account.
+
+### Settings screen (backup controls)
+
+| Action | Behaviour |
+|---|---|
+| Export now | Manual trigger — saves JSON to Downloads immediately |
+| Restore from backup | File picker — imports a JSON and repopulates Room DB |
+
+### Why both layers?
+
+| Scenario | Auto Backup | Local export |
+|---|---|---|
+| Accidental uninstall, same Google account | ✅ | ✅ |
+| New phone, same Google account | ✅ | ✅ |
+| No Google account / de-Googled phone | ❌ | ✅ |
+| Google account changed | ❌ | ✅ |
+| User wants a file they can inspect or move | ❌ | ✅ |
+
+---
+
 ## Screens (MVP)
 
 | # | Screen | Purpose |
@@ -111,7 +167,8 @@ Target market: anyone with friends. Replaces the Notes-app hack everyone current
 | 2 | **Add Loan** | Photo (nudged) → item name + note → borrower → return date → tags |
 | 3 | **Loan Detail** | Full loan view, nudge button, mark returned, edit, delete |
 | 4 | **History** | Archive of all returned loans |
-| 5 | **Paywall Sheet** | Bottom sheet when free user hits 3-loan limit |
+| 5 | **Settings** | Export now / Restore from backup |
+| 6 | **Paywall Sheet** | Bottom sheet when free user hits 3-loan limit |
 
 ---
 
@@ -143,6 +200,7 @@ data class Loan(
 ```
 isUnlocked: Boolean      — true after $2.99 purchase
 onboardingDone: Boolean
+lastBackupTimestamp: Long — epoch millis of last nightly export
 ```
 
 ---
@@ -155,10 +213,10 @@ Inherited in full from the **Travel Pack Pal design blueprint** (see `docs/desig
 
 | Token | Value |
 |---|---|
-| Primary (teal) | `hsl(183 80% 38%)` |
-| Background | Warm off-white `hsl(240 5% 96%)` |
+| Primary (teal) | `hsl(183 80% 38%)` / `Color(0xFF0E9AA7)` |
+| Background | Warm off-white `hsl(240 5% 96%)` / `Color(0xFFF4F3F5)` |
 | Card surface | Pure white `hsl(0 0% 100%)` |
-| Overdue / destructive | Red `hsl(0 68% 50%)` |
+| Overdue / destructive | Red `hsl(0 68% 50%)` / `Color(0xFFD32F2F)` |
 | Base radius | `12dp` |
 | Body font | DM Sans |
 | Display font | Cormorant Garamond |
@@ -179,7 +237,6 @@ Inherited in full from the **Travel Pack Pal design blueprint** (see `docs/desig
 
 ## What's Deferred (Post-MVP)
 
-- Google Drive / local backup & restore
 - iOS version
 - SMS fallback for the nudge button
 - Statistics screen (most borrowed-from person, avg return time)
