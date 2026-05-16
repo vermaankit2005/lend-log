@@ -10,117 +10,188 @@
 Open → Snap photo of item → Pick friend from contacts → Set return date.  
 A clean feed of outstanding loans with overdue badges and one-tap WhatsApp reminders.
 
----
-
-## Core Decisions
-
-### Loan Entry
-
-| Field | Decision |
-|---|---|
-| Photo | Optional, but app nudges user to add one |
-| Item name / title | Short text label (required) |
-| Notes | Free-text note field (optional) |
-| Borrower | Phone contacts first; manual name entry as fallback if permission denied or contact doesn't exist |
-| Return date | Required |
-| Category / tag | Custom tags created by the user (no preset list) |
-| Items per loan | One item per record (one photo, one borrower, one date) |
-
----
-
-### The Feed
-
-- **Default view:** Chronological list of all active (unreturned) loans
-- **Overdue loans:** Pinned to the top of the feed with a red badge — can't be missed
-- **View toggle:** Switch between two layouts:
-  - **By Item** — flat list, one card per loan
-  - **By Person** — collapsible sections grouped under each borrower
-- **Filtering:** Filter chips (no full text search) — e.g. filter by overdue, by tag, by person
-- **No search bar** for MVP
-
----
-
-### Returned Loans
-
-- Marking a loan as returned moves it to a dedicated **History / Archive tab**
-- History is always viewable; never permanently deleted
-- Returned loans do **not** count toward the active loan limit
-
----
-
-### Notifications
-
-| Trigger | Timing |
-|---|---|
-| Pre-warning | 3 days before the return date |
-| Overdue alert | When the return date passes |
-
-Both are **local push notifications** — no server required.
-
----
-
-### Nudge (WhatsApp Reminder)
-
-- Each active loan card has a **nudge button**
-- Tapping it opens **WhatsApp** with a pre-filled message to the borrower
-- Example message: _"Hey! Just a reminder — you still have my [item name]. Would love to get it back soon 😊"_
-- Falls back gracefully if WhatsApp is not installed
-
----
-
-### Monetisation
-
-| Tier | Limit | Price |
-|---|---|---|
-| Free | 3 active loans at a time | Free |
-| Unlimited | No limit on active loans | \$2.99 one-time unlock (Google Play Billing) |
-
-- "Active" = unreturned loans only
-- Returning a loan frees up a slot on the free tier
-- History is always unlimited regardless of tier
-
----
-
-## Screens (MVP)
-
-1. **Feed / Home** — active loans, overdue pinned at top, view toggle, filter chips
-2. **Add Loan** — photo (optional, nudged) → item name + note → borrower picker → return date → tags
-3. **Loan Detail** — full view of a loan, nudge button, mark as returned, edit/delete
-4. **History** — archive of all returned loans
-5. **Paywall Sheet** — appears when user tries to add a 4th active loan on the free tier
-
----
-
-## Design Language
-
-Inherited from **Travel Pack Pal** design blueprint:
-
-- **Colors:** Teal primary (`hsl(183 80% 38%)`) + warm cream/sand surfaces
-- **Font:** DM Sans (body) · Cormorant Garamond (display headings)
-- **Radius:** 12px base (`0.75rem`)
-- **Icons:** Lucide (strokeWidth 1.75)
-- **Overdue badge:** Red (`hsl(0 68% 50%)`)
-- **Shadows:** 8-level scale from the blueprint
-- Same card, button, badge, and empty-state patterns
-
----
-
-## What's Deferred (Post-MVP)
-
-- iCloud / Google Drive backup
-- iOS version
-- Lending to non-contacts (share link)
-- Statistics screen (most borrowed-from person, average return time, etc.)
-- Widget (home screen glanceable count of overdue loans)
-- SMS fallback for the nudge button
+Target market: anyone with friends. Replaces the Notes-app hack everyone currently uses.
 
 ---
 
 ## Tech Stack
 
-TBD — to be decided before implementation begins.
+| Concern | Choice | Rationale |
+|---|---|---|
+| Language | Kotlin | JVM-based, 100% Java-interoperable, reads like modern Java |
+| UI | Jetpack Compose | Declarative, modern Android standard, replaces XML layouts |
+| Local DB | Room (SQLite ORM) | Feels like JPA/Hibernate — familiar to Spring Boot devs |
+| Preferences | DataStore | Replaces SharedPreferences |
+| Async | Kotlin Coroutines + Flow | Replaces AsyncTask/callbacks |
+| State | ViewModel + StateFlow | Lifecycle-aware reactive state |
+| Navigation | Navigation Compose | Type-safe screen routing |
+| Camera | CameraX | Jetpack camera library |
+| Contacts | ContactsContract (Android API) | Standard contacts ContentProvider |
+| Notifications | WorkManager + NotificationManager | Scheduled local push notifications |
+| Billing | Google Play Billing Library v6+ | One-time purchase unlock |
+| DI | Hilt | Jetpack-native dependency injection |
+| Image loading | Coil | Kotlin-first, Compose-compatible |
 
-Options under consideration:
-- **Jetpack Compose** (native Kotlin) — best performance + full Android API access
-- **React Native** — closer to the existing web design blueprint
-- **Flutter** (Dart) — beautiful defaults, fast, cross-platform ready
+### Java → Modern Android equivalents (for reference)
+
+| Old (Java era) | Modern equivalent |
+|---|---|
+| XML layouts | Jetpack Compose |
+| AsyncTask | Kotlin Coroutines |
+| SQLiteOpenHelper | Room |
+| SharedPreferences | DataStore |
+| Loader / callbacks | StateFlow / ViewModel |
+| Dagger 2 | Hilt |
+
+---
+
+## Product Decisions
+
+### Loan Entry
+
+| Field | Decision |
+|---|---|
+| Photo | Optional — app shows a soft nudge prompt but never blocks |
+| Item name | Short text label (required) |
+| Notes | Free-text note (optional) |
+| Borrower | Phone contacts first; manual name entry if permission denied or contact doesn't exist |
+| Return date | Required |
+| Category / tag | Custom tags created by the user (no preset list) |
+| Items per loan | One item per record — one photo, one borrower, one date |
+
+### The Feed (Home Screen)
+
+- Chronological list of all active (unreturned) loans
+- **Overdue loans** pinned to the top with a red badge — cannot be missed
+- **View toggle:** switch between:
+  - **By Item** — flat list, one card per loan record
+  - **By Person** — collapsible sections, all loans grouped under each borrower
+- **Filter chips** (no full text search bar) — filter by: Overdue · Tag · Person
+- No search bar in MVP
+
+### Returned Loans
+
+- Marking returned moves the loan to a **History / Archive tab**
+- History is always viewable, never permanently deleted
+- Returned loans do **not** count toward the active loan limit
+
+### Notifications (all local, no server)
+
+| Trigger | Timing |
+|---|---|
+| Pre-warning | 3 days before the return date |
+| Overdue alert | Day the return date passes |
+
+### Nudge — WhatsApp Reminder
+
+- Each active loan card has a nudge button
+- Opens **WhatsApp** with a pre-filled message to the borrower
+- Example: _"Hey! Just a reminder — you still have my [item name]. Would love to get it back soon 😊"
+- Graceful fallback if WhatsApp is not installed (show toast)
+
+### Monetisation
+
+| Tier | Active loan limit | Price |
+|---|---|---|
+| Free | 3 active loans | Free |
+| Unlimited | No limit | $2.99 one-time (Google Play Billing) |
+
+- "Active" = unreturned loans only
+- Returning a loan frees up a slot on the free tier
+- History is always unlimited regardless of tier
+- Paywall sheet appears when a free user tries to add a 4th active loan
+
+---
+
+## Screens (MVP)
+
+| # | Screen | Purpose |
+|---|---|---|
+| 1 | **Feed / Home** | Active loans, overdue pinned, view toggle, filter chips |
+| 2 | **Add Loan** | Photo (nudged) → item name + note → borrower → return date → tags |
+| 3 | **Loan Detail** | Full loan view, nudge button, mark returned, edit, delete |
+| 4 | **History** | Archive of all returned loans |
+| 5 | **Paywall Sheet** | Bottom sheet when free user hits 3-loan limit |
+
+---
+
+## Data Model
+
+### `Loan` entity (Room)
+
+```kotlin
+@Entity(tableName = "loans")
+data class Loan(
+    @PrimaryKey val id: String,           // UUID
+    val itemName: String,                  // required
+    val notes: String?,                    // optional free text
+    val photoUri: String?,                 // local file URI, optional
+    val borrowerName: String,              // required
+    val borrowerContactId: String?,        // null if manually entered
+    val borrowerPhone: String?,            // for WhatsApp nudge
+    val returnDate: Long,                  // epoch millis
+    val lentDate: Long,                    // epoch millis
+    val isReturned: Boolean,
+    val returnedDate: Long?,               // null until marked returned
+    val tags: String,                      // comma-separated, denormalised for simplicity
+    val createdAt: Long
+)
+```
+
+### `AppPreferences` (DataStore)
+
+```
+isUnlocked: Boolean      — true after $2.99 purchase
+onboardingDone: Boolean
+```
+
+---
+
+## Design Language
+
+Inherited in full from the **Travel Pack Pal design blueprint** (see `docs/design-blueprint.md`).
+
+### Key tokens
+
+| Token | Value |
+|---|---|
+| Primary (teal) | `hsl(183 80% 38%)` |
+| Background | Warm off-white `hsl(240 5% 96%)` |
+| Card surface | Pure white `hsl(0 0% 100%)` |
+| Overdue / destructive | Red `hsl(0 68% 50%)` |
+| Base radius | `12dp` |
+| Body font | DM Sans |
+| Display font | Cormorant Garamond |
+| Icon stroke | 1.75 (thinner than default 2) |
+
+### Android translation
+
+| Web blueprint token | Android / Compose equivalent |
+|---|---|
+| Tailwind CSS variables | `MaterialTheme.colorScheme` custom theme |
+| `rounded-xl` (12px) | `RoundedCornerShape(12.dp)` |
+| `shadow-card` | `Modifier.shadow(elevation = 2.dp, ...)` |
+| Lucide icons | `androidx.compose.material.icons` + custom SVGs |
+| `animate-fade-in-up` | `AnimatedVisibility` + `slideInVertically` |
+| Stagger 70ms per item | `LaunchedEffect` delay per index |
+
+---
+
+## What's Deferred (Post-MVP)
+
+- Google Drive / local backup & restore
+- iOS version
+- SMS fallback for the nudge button
+- Statistics screen (most borrowed-from person, avg return time)
+- Home screen widget (glanceable overdue count)
+- Lending share link (for non-contacts)
+- Dark mode
+
+---
+
+## Out of Scope (Forever)
+
+- Backend / cloud sync
+- User accounts / login
+- Social features
+- Push via FCM
