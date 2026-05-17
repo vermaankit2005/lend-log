@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 import com.lendlog.app.data.datastore.AppPreferences
 import com.lendlog.app.navigation.AppNavigation
 import com.lendlog.app.ui.theme.LendLogTheme
