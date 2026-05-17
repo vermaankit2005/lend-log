@@ -2,7 +2,7 @@ name: Build Debug APK
 
 on:
   push:
-    branches: [ "main", "claude/**" ]
+    branches: [ "main", "claude/**", "ccr/**" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
