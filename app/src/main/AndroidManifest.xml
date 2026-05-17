@@ -9,6 +9,12 @@
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <!-- Required for Android 11+ Package Visibility to detect WhatsApp -->
+    <queries>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+    </queries>
+
     <application
         android:name=".LendLogApp"
         android:allowBackup="true"
