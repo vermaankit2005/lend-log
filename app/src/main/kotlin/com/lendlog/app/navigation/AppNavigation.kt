@@ -117,7 +117,11 @@ fun AppNavigation() {
             composable(Routes.ADD_LOAN) {
                 AddLoanScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onLoanSaved    = { navController.popBackStack() }
+                    onLoanSaved    = { loanId ->
+                        navController.navigate(Routes.loanDetail(loanId)) {
+                            popUpTo(Routes.ADD_LOAN) { inclusive = true }
+                        }
+                    }
                 )
             }
 
@@ -128,7 +132,8 @@ fun AppNavigation() {
                 val loanId = backStack.arguments?.getString("loanId") ?: return@composable
                 LoanDetailScreen(
                     loanId         = loanId,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAdd = { navController.navigate(Routes.ADD_LOAN) }
                 )
             }
 
