@@ -31,9 +31,6 @@ import com.lendlog.app.ui.history.HistoryScreen
 import com.lendlog.app.ui.home.HomeScreen
 import com.lendlog.app.ui.settings.SettingsScreen
 import com.lendlog.app.ui.theme.Ink
-import com.lendlog.app.ui.theme.N0
-import com.lendlog.app.ui.theme.N200
-import com.lendlog.app.ui.theme.N400
 
 object Routes {
     const val HOME       = "home"
@@ -87,10 +84,13 @@ fun AppNavigation() {
         bottomBar = {
             if (currentRoute in bottomNavRoutes) {
                 Column {
-                    HorizontalDivider(color = N200, thickness = 1.dp)
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outline,
+                        thickness = 1.dp
+                    )
                     NavigationBar(
-                        containerColor  = N0,
-                        tonalElevation  = 0.dp
+                        containerColor = MaterialTheme.colorScheme.background,
+                        tonalElevation = 0.dp
                     ) {
                         navItems.forEach { item ->
                             val selected = currentRoute == item.route
@@ -111,11 +111,11 @@ fun AppNavigation() {
                                 },
                                 label  = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor   = Ink,
-                                    selectedTextColor   = Ink,
+                                    selectedIconColor   = MaterialTheme.colorScheme.onBackground,
+                                    selectedTextColor   = MaterialTheme.colorScheme.onBackground,
                                     indicatorColor      = Color.Transparent,
-                                    unselectedIconColor = N400,
-                                    unselectedTextColor = N400
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
                         }

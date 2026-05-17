@@ -10,16 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lendlog.app.ui.components.EmptyState
+import com.lendlog.app.ui.components.LendLogTopBar
 import com.lendlog.app.ui.components.LoanCard
-import com.lendlog.app.ui.theme.N200
-import com.lendlog.app.ui.theme.N50
-import com.lendlog.app.ui.theme.N500
-import com.lendlog.app.ui.theme.N800
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,23 +37,8 @@ fun HistoryScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
-        topBar = {
-            Column {
-                TopAppBar(
-                    title = {
-                        Text(
-                            "History",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = N800
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
-                )
-                HorizontalDivider(color = N200, thickness = 1.dp)
-            }
-        },
-        containerColor = N50
+        topBar = { LendLogTopBar(title = "History") },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -86,7 +67,7 @@ fun HistoryScreen(
                             Text(
                                 text = month.uppercase(),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = N500,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                             )
                         }

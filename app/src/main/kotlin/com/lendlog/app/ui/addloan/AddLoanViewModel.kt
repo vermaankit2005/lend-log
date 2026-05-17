@@ -80,7 +80,9 @@ class AddLoanViewModel @Inject constructor(
             tags = state.tags.trim()
         )
         repository.addLoan(loan)
-        notificationScheduler.scheduleForLoan(loan)
+        val notifEnabled = repository.notificationsEnabled.first()
+        val days = repository.reminderDays.first()
+        if (notifEnabled) notificationScheduler.scheduleForLoan(loan, days)
         _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
     }
 }

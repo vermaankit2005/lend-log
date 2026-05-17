@@ -29,6 +29,9 @@ class LoanRepository @Inject constructor(
     val activeLoanCount: Flow<Int> = loanDao.observeActiveLoanCount()
     val isUnlocked: Flow<Boolean> = appPreferences.isUnlocked
     val lastBackupTimestamp: Flow<Long> = appPreferences.lastBackupTimestamp
+    val themeMode: Flow<String> = appPreferences.themeMode
+    val notificationsEnabled: Flow<Boolean> = appPreferences.notificationsEnabled
+    val reminderDays: Flow<Int> = appPreferences.reminderDays
 
     fun observeLoan(id: String): Flow<Loan?> = loanDao.observeLoanById(id)
 
@@ -55,6 +58,9 @@ class LoanRepository @Inject constructor(
     }
 
     suspend fun setUnlocked(unlocked: Boolean) = appPreferences.setUnlocked(unlocked)
+    suspend fun setThemeMode(mode: String) = appPreferences.setThemeMode(mode)
+    suspend fun setNotificationsEnabled(enabled: Boolean) = appPreferences.setNotificationsEnabled(enabled)
+    suspend fun setReminderDays(days: Int) = appPreferences.setReminderDays(days)
 
     fun createNewLoan(
         itemName: String,

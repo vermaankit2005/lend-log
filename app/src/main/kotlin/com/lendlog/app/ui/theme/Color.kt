@@ -7,10 +7,10 @@ val Ink        = Color(0xFF1B2A4E)
 val InkPressed = Color(0xFF13203D)
 val InkSoft    = Color(0xFFEEF1F8)
 
-// === Neutral scale (warm-tinted, Linear/Wise inspired) ===
+// === Neutral scale (navy-tinted) ===
 val N0   = Color(0xFFFFFFFF)
-val N50  = Color(0xFFFAFAFA)
-val N100 = Color(0xFFF4F4F5)
+val N50  = Color(0xFFF0F4FA)
+val N100 = Color(0xFFE6EBF5)
 val N200 = Color(0xFFE9E9EC)
 val N300 = Color(0xFFD4D4D8)
 val N400 = Color(0xFFA1A1AA)

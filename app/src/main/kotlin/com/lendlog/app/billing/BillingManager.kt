@@ -2,8 +2,18 @@ package com.lendlog.app.billing
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import com.android.billingclient.api.*
 import kotlinx.coroutines.*
+
+private fun Context.findActivity(): Activity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
+}
 
 class BillingManager(private val context: Context) {
 
@@ -76,7 +86,7 @@ class BillingManager(private val context: Context) {
                 .build()
 
             withContext(Dispatchers.Main) {
-                val activity = context as? Activity
+                val activity = context.findActivity()
                 if (activity != null) {
                     val billingResult = client.launchBillingFlow(activity, flowParams)
                     if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
