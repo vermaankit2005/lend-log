@@ -57,6 +57,7 @@ fun AddLoanScreen(
 
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingCameraLaunch by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success && tempCameraUri != null) viewModel.updatePhotoUri(tempCameraUri.toString())
@@ -64,6 +65,15 @@ fun AddLoanScreen(
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { viewModel.updatePhotoUri(it.toString()) }
+    }
+
+    LaunchedEffect(cameraPermission.status.isGranted, pendingCameraLaunch) {
+        if (pendingCameraLaunch && cameraPermission.status.isGranted) {
+            pendingCameraLaunch = false
+            val uri = createTempPhotoFile(context)
+            tempCameraUri = uri
+            uri?.let { cameraLauncher.launch(it) }
+        }
     }
 
     val contactsPermission = rememberPermissionState(Manifest.permission.READ_CONTACTS)
@@ -106,6 +116,7 @@ fun AddLoanScreen(
                             tempCameraUri = createTempPhotoFile(context)
                             tempCameraUri?.let { cameraLauncher.launch(it) }
                         } else {
+                            pendingCameraLaunch = true
                             cameraPermission.launchPermissionRequest()
                         }
                     }

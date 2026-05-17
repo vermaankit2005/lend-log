@@ -70,10 +70,10 @@ class AddLoanViewModel @Inject constructor(
     private suspend fun doSaveLoan(state: AddLoanUiState) {
         _uiState.update { it.copy(isSaving = true) }
         val loan = repository.createNewLoan(
-            itemName = state.itemName.trim(),
+            itemName = state.itemName.trim().titleCase(),
             notes = state.notes.trim().ifEmpty { null },
             photoUri = state.photoUri,
-            borrowerName = state.borrowerName.trim(),
+            borrowerName = state.borrowerName.trim().titleCase(),
             borrowerContactId = state.borrowerContactId,
             borrowerPhone = state.borrowerPhone,
             returnDate = state.returnDate!!,
@@ -84,3 +84,6 @@ class AddLoanViewModel @Inject constructor(
         _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
     }
 }
+
+private fun String.titleCase(): String =
+    split(" ").joinToString(" ") { word -> word.replaceFirstChar { it.uppercaseChar() } }
