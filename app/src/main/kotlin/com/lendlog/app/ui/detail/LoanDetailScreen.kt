@@ -35,6 +35,7 @@ fun LoanDetailScreen(
     loanId: String,
     onNavigateBack: () -> Unit,
     onNavigateToAdd: () -> Unit,
+    onNavigateToEdit: (String) -> Unit,
     viewModel: LoanDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -117,6 +118,14 @@ fun LoanDetailScreen(
                                 onDismissRequest = { showMenu = false },
                                 containerColor = N0
                             ) {
+                                if (uiState.loan?.isReturned == false) {
+                                    DropdownMenuItem(
+                                        text = { Text("Edit loan", style = MaterialTheme.typography.bodyMedium) },
+                                        leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                                        onClick = { showMenu = false; onNavigateToEdit(loanId) }
+                                    )
+                                    HorizontalDivider(color = N100)
+                                }
                                 DropdownMenuItem(
                                     text = { Text("Delete loan", color = Danger, style = MaterialTheme.typography.bodyMedium) },
                                     leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = Danger, modifier = Modifier.size(18.dp)) },

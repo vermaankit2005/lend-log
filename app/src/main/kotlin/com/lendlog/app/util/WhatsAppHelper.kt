@@ -8,9 +8,11 @@ import android.widget.Toast
 
 object WhatsAppHelper {
 
+    private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.lendlog.app"
+
     fun sendNudge(context: Context, phone: String, itemName: String) {
         val cleanPhone = phone.replace(Regex("[^\\d+]"), "")
-        val message = "Hey! Just a reminder — you still have my $itemName. Would love to get it back soon 😊"
+        val message = "Hey! Just a reminder — you still have my $itemName. Would love to get it back soon 😊\n\nSent via LendLog 📦 $PLAY_STORE_URL"
         val url = "https://wa.me/$cleanPhone?text=${Uri.encode(message)}"
 
         // Try WhatsApp then WhatsApp Business; fall back to browser

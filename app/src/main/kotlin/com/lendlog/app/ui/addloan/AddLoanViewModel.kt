@@ -1,6 +1,7 @@
 package com.lendlog.app.ui.addloan
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lendlog.app.data.repository.LoanRepository
@@ -22,7 +23,8 @@ data class AddLoanUiState(
     val isSaving: Boolean = false,
     val savedLoanId: String? = null,
     val showPaywall: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isEditMode: Boolean = false
 ) {
     val isValid: Boolean get() = itemName.isNotBlank() && borrowerName.isNotBlank() && returnDate != null
 }
@@ -30,11 +32,36 @@ data class AddLoanUiState(
 @HiltViewModel
 class AddLoanViewModel @Inject constructor(
     private val repository: LoanRepository,
-    private val notificationScheduler: NotificationScheduler
+    private val notificationScheduler: NotificationScheduler,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AddLoanUiState())
+    private val editLoanId: String? = savedStateHandle.get<String>("loanId")
+
+    private val _uiState = MutableStateFlow(AddLoanUiState(isEditMode = editLoanId != null))
     val uiState: StateFlow<AddLoanUiState> = _uiState.asStateFlow()
+
+    init {
+        editLoanId?.let { id ->
+            viewModelScope.launch {
+                val loan = repository.observeLoan(id).first()
+                if (loan != null) {
+                    _uiState.update {
+                        it.copy(
+                            itemName = loan.itemName,
+                            notes = loan.notes ?: "",
+                            photoUri = loan.photoUri,
+                            borrowerName = loan.borrowerName,
+                            borrowerContactId = loan.borrowerContactId,
+                            borrowerPhone = loan.borrowerPhone,
+                            returnDate = loan.returnDate,
+                            tags = loan.tags
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     fun updateItemName(value: String) = _uiState.update { it.copy(itemName = value) }
     fun updateNotes(value: String) = _uiState.update { it.copy(notes = value) }
@@ -50,7 +77,7 @@ class AddLoanViewModel @Inject constructor(
         val state = _uiState.value
         if (!state.isValid) return
         viewModelScope.launch {
-            if (!repository.canAddLoan()) {
+            if (editLoanId == null && !repository.canAddLoan()) {
                 _uiState.update { it.copy(showPaywall = true) }
                 return@launch
             }
@@ -69,21 +96,41 @@ class AddLoanViewModel @Inject constructor(
 
     private suspend fun doSaveLoan(state: AddLoanUiState) {
         _uiState.update { it.copy(isSaving = true) }
-        val loan = repository.createNewLoan(
-            itemName = state.itemName.trim().titleCase(),
-            notes = state.notes.trim().ifEmpty { null },
-            photoUri = state.photoUri,
-            borrowerName = state.borrowerName.trim().titleCase(),
-            borrowerContactId = state.borrowerContactId,
-            borrowerPhone = state.borrowerPhone,
-            returnDate = state.returnDate!!,
-            tags = state.tags.trim()
-        )
-        repository.addLoan(loan)
-        val notifEnabled = repository.notificationsEnabled.first()
-        val days = repository.reminderDays.first()
-        if (notifEnabled) notificationScheduler.scheduleForLoan(loan, days)
-        _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
+        if (editLoanId != null) {
+            val existing = repository.observeLoan(editLoanId).first() ?: return
+            val updated = existing.copy(
+                itemName = state.itemName.trim().titleCase(),
+                notes = state.notes.trim().ifEmpty { null },
+                photoUri = state.photoUri,
+                borrowerName = state.borrowerName.trim().titleCase(),
+                borrowerContactId = state.borrowerContactId,
+                borrowerPhone = state.borrowerPhone,
+                returnDate = state.returnDate!!,
+                tags = state.tags.trim()
+            )
+            repository.updateLoan(updated)
+            notificationScheduler.cancelForLoan(editLoanId)
+            val notifEnabled = repository.notificationsEnabled.first()
+            val days = repository.reminderDays.first()
+            if (notifEnabled && !updated.isReturned) notificationScheduler.scheduleForLoan(updated, days)
+            _uiState.update { it.copy(isSaving = false, savedLoanId = editLoanId) }
+        } else {
+            val loan = repository.createNewLoan(
+                itemName = state.itemName.trim().titleCase(),
+                notes = state.notes.trim().ifEmpty { null },
+                photoUri = state.photoUri,
+                borrowerName = state.borrowerName.trim().titleCase(),
+                borrowerContactId = state.borrowerContactId,
+                borrowerPhone = state.borrowerPhone,
+                returnDate = state.returnDate!!,
+                tags = state.tags.trim()
+            )
+            repository.addLoan(loan)
+            val notifEnabled = repository.notificationsEnabled.first()
+            val days = repository.reminderDays.first()
+            if (notifEnabled) notificationScheduler.scheduleForLoan(loan, days)
+            _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
+        }
     }
 }
 
