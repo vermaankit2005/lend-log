@@ -81,18 +81,22 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Settings",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = N800
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
-            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Settings",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = N800
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
+                )
+                HorizontalDivider(color = N200, thickness = 1.dp)
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = N50

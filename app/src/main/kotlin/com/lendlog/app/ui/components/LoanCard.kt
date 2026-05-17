@@ -189,7 +189,7 @@ private fun DueDateRow(loan: Loan, isDueSoon: Boolean, accentColor: androidx.com
             )
         } else {
             Text(
-                text  = absDate,
+                text  = if (loan.isReturned) absDate else "Due $absDate",
                 style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
                 color = if (loan.isReturned) N400 else N500
             )
