@@ -3,23 +3,30 @@ package com.lendlog.app.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lendlog.app.data.repository.LoanRepository
+import com.lendlog.app.ui.theme.ThemeMode
+import com.lendlog.app.worker.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SettingsUiState(
+    val isUnlocked: Boolean = false,
+    val showPaywall: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val notificationsEnabled: Boolean = true,
+    val reminderDays: Int = 3,
     val lastBackupTimestamp: Long = 0L,
     val isExporting: Boolean = false,
     val exportResult: Boolean? = null,
     val isRestoring: Boolean = false,
     val restoreResult: Boolean? = null,
-    val isUnlocked: Boolean = false
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: LoanRepository
+    private val repository: LoanRepository,
+    private val notificationScheduler: NotificationScheduler
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -28,12 +35,57 @@ class SettingsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             combine(
-                repository.lastBackupTimestamp,
-                repository.isUnlocked
-            ) { ts, unlocked -> ts to unlocked }
-                .collect { (ts, unlocked) ->
-                    _uiState.update { it.copy(lastBackupTimestamp = ts, isUnlocked = unlocked) }
-                }
+                repository.isUnlocked,
+                repository.themeMode,
+                repository.notificationsEnabled,
+                repository.reminderDays,
+                repository.lastBackupTimestamp
+            ) { unlocked, theme, notif, days, ts ->
+                _uiState.value.copy(
+                    isUnlocked           = unlocked,
+                    themeMode            = ThemeMode.valueOf(theme),
+                    notificationsEnabled = notif,
+                    reminderDays         = days,
+                    lastBackupTimestamp  = ts
+                )
+            }.collect { state -> _uiState.value = state }
+        }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { repository.setThemeMode(mode.name) }
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setNotificationsEnabled(enabled)
+            val loans = repository.activeLoans.first()
+            notificationScheduler.cancelAll(loans.map { it.id })
+            if (enabled) {
+                val days = repository.reminderDays.first()
+                loans.forEach { notificationScheduler.scheduleForLoan(it, days) }
+            }
+        }
+    }
+
+    fun setReminderDays(days: Int) {
+        viewModelScope.launch {
+            repository.setReminderDays(days)
+            val notifEnabled = repository.notificationsEnabled.first()
+            if (notifEnabled) {
+                val loans = repository.activeLoans.first()
+                notificationScheduler.cancelAll(loans.map { it.id })
+                loans.forEach { notificationScheduler.scheduleForLoan(it, days) }
+            }
+        }
+    }
+
+    fun showPaywall() = _uiState.update { it.copy(showPaywall = true) }
+    fun dismissPaywall() = _uiState.update { it.copy(showPaywall = false) }
+    fun onPurchased() {
+        viewModelScope.launch {
+            repository.setUnlocked(true)
+            _uiState.update { it.copy(showPaywall = false) }
         }
     }
 

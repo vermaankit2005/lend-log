@@ -8,15 +8,12 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,6 +23,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.ui.components.EmptyState
+import com.lendlog.app.ui.components.LendLogTopBar
 import com.lendlog.app.ui.components.LoanCard
 import com.lendlog.app.ui.theme.*
 import kotlinx.coroutines.delay
@@ -43,43 +41,8 @@ fun HomeScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
-        topBar = {
-            Column {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .background(Ink, RoundedCornerShape(8.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    "L",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                            Text(
-                                "LendLog",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = N800
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = N50
-                    )
-                )
-                HorizontalDivider(color = N200, thickness = 1.dp)
-            }
-        },
-        containerColor = N50
+        topBar = { LendLogTopBar(showLogo = true) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -190,10 +153,10 @@ private fun SummaryRow(
             Text(
                 text = "$totalCount active",
                 style = MaterialTheme.typography.bodyMedium,
-                color = N500
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (overdueCount > 0) {
-                Text("·", style = MaterialTheme.typography.bodyMedium, color = N400)
+                Text("·", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
                 Text(
                     text = "$overdueCount overdue",
                     style = MaterialTheme.typography.bodyMedium,
@@ -253,7 +216,7 @@ private fun ByPersonFeed(grouped: Map<String, List<Loan>>, onLoanClick: (String)
                 Text(
                     text = person.uppercase(),
                     style = MaterialTheme.typography.labelSmall,
-                    color = N500,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                 )
             }

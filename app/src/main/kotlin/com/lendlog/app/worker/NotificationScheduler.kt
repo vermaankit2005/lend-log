@@ -14,15 +14,15 @@ class NotificationScheduler @Inject constructor(
 ) {
     private val workManager = WorkManager.getInstance(context)
 
-    fun scheduleForLoan(loan: Loan) {
+    fun scheduleForLoan(loan: Loan, reminderDays: Int = 3) {
         if (loan.isReturned) return
 
         val now = System.currentTimeMillis()
-        val threeDaysBefore = loan.returnDate - TimeUnit.DAYS.toMillis(3)
+        val reminderBefore = loan.returnDate - TimeUnit.DAYS.toMillis(reminderDays.toLong())
         val overdueAt = loan.returnDate
 
-        if (threeDaysBefore > now) {
-            val delay = threeDaysBefore - now
+        if (reminderBefore > now) {
+            val delay = reminderBefore - now
             val request = buildNotifRequest(
                 loanId = loan.id,
                 itemName = loan.itemName,
@@ -58,6 +58,8 @@ class NotificationScheduler @Inject constructor(
         workManager.cancelUniqueWork("notif_due_soon_$loanId")
         workManager.cancelUniqueWork("notif_overdue_$loanId")
     }
+
+    fun cancelAll(loanIds: List<String>) = loanIds.forEach { cancelForLoan(it) }
 
     private fun buildNotifRequest(
         loanId: String,
