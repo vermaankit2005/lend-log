@@ -72,7 +72,7 @@ fun HomeScreen(
                 }
             } else {
                 when (uiState.feedView) {
-                    FeedView.BY_ITEM   -> ByItemFeed(uiState = uiState, onLoanClick = onNavigateToDetail)
+                    FeedView.BY_STATUS -> ByItemFeed(uiState = uiState, onLoanClick = onNavigateToDetail)
                     FeedView.BY_PERSON -> ByPersonFeed(grouped = uiState.groupedByPerson, onLoanClick = onNavigateToDetail)
                 }
             }
@@ -88,8 +88,8 @@ private fun FeedToggle(feedView: FeedView, onFeedViewChange: (FeedView) -> Unit)
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
         SegmentedButton(
-            selected = feedView == FeedView.BY_ITEM,
-            onClick  = { onFeedViewChange(FeedView.BY_ITEM) },
+            selected = feedView == FeedView.BY_STATUS,
+            onClick  = { onFeedViewChange(FeedView.BY_STATUS) },
             shape    = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
             colors   = SegmentedButtonDefaults.colors(
                 activeContainerColor = BrandSoft,
@@ -97,7 +97,7 @@ private fun FeedToggle(feedView: FeedView, onFeedViewChange: (FeedView) -> Unit)
                 activeBorderColor    = Brand
             ),
             icon = {}
-        ) { Text("By Item", style = MaterialTheme.typography.labelLarge) }
+        ) { Text("By Status", style = MaterialTheme.typography.labelLarge) }
 
         SegmentedButton(
             selected = feedView == FeedView.BY_PERSON,
