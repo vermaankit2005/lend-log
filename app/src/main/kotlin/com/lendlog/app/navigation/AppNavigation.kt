@@ -33,13 +33,15 @@ import com.lendlog.app.ui.settings.SettingsScreen
 import com.lendlog.app.ui.theme.Ink
 
 object Routes {
-    const val HOME       = "home"
-    const val ADD_LOAN   = "add"
+    const val HOME        = "home"
+    const val ADD_LOAN    = "add"
     const val LOAN_DETAIL = "detail/{loanId}"
-    const val HISTORY    = "history"
-    const val SETTINGS   = "settings"
+    const val EDIT_LOAN   = "edit/{loanId}"
+    const val HISTORY     = "history"
+    const val SETTINGS    = "settings"
 
     fun loanDetail(loanId: String) = "detail/$loanId"
+    fun editLoan(loanId: String)   = "edit/$loanId"
 }
 
 private data class NavItem(
@@ -149,9 +151,20 @@ fun AppNavigation() {
             ) { backStack ->
                 val loanId = backStack.arguments?.getString("loanId") ?: return@composable
                 LoanDetailScreen(
-                    loanId         = loanId,
+                    loanId            = loanId,
+                    onNavigateBack    = { navController.popBackStack() },
+                    onNavigateToAdd   = { navController.navigate(Routes.ADD_LOAN) },
+                    onNavigateToEdit  = { id -> navController.navigate(Routes.editLoan(id)) }
+                )
+            }
+
+            composable(
+                route     = Routes.EDIT_LOAN,
+                arguments = listOf(navArgument("loanId") { type = NavType.StringType })
+            ) {
+                AddLoanScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onNavigateToAdd = { navController.navigate(Routes.ADD_LOAN) }
+                    onLoanSaved    = { navController.popBackStack() }
                 )
             }
 

@@ -146,7 +146,7 @@ fun AddLoanScreen(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text("New Loan", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = N800) },
+                    title = { Text(if (uiState.isEditMode) "Edit Loan" else "New Loan", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = N800) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
                             Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
@@ -204,9 +204,10 @@ fun AddLoanScreen(
             )
 
             DateField(
-                selectedDate   = uiState.returnDate,
-                onDateSelected = viewModel::updateReturnDate,
-                context        = context
+                selectedDate    = uiState.returnDate,
+                onDateSelected  = viewModel::updateReturnDate,
+                context         = context,
+                allowPastDates  = uiState.isEditMode
             )
             QuickDateChips(onDateSelected = viewModel::updateReturnDate)
 
@@ -227,7 +228,11 @@ fun AddLoanScreen(
             )
 
             TealGradientButton(
-                text = if (uiState.isSaving) "Saving…" else "Save Loan",
+                text = when {
+                    uiState.isSaving   -> "Saving…"
+                    uiState.isEditMode -> "Save Changes"
+                    else               -> "Save Loan"
+                },
                 onClick = viewModel::saveLoan,
                 enabled = uiState.isValid && !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth()
@@ -348,7 +353,8 @@ private fun PhotoSheetRow(
 private fun DateField(
     selectedDate: Long?,
     onDateSelected: (Long) -> Unit,
-    context: Context
+    context: Context,
+    allowPastDates: Boolean = false
 ) {
     val calendar = Calendar.getInstance()
     val now = System.currentTimeMillis()
@@ -375,7 +381,7 @@ private fun DateField(
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
-        ).apply { datePicker.minDate = System.currentTimeMillis() }.show()
+        ).apply { if (!allowPastDates) datePicker.minDate = System.currentTimeMillis() }.show()
     }) {
         OutlinedTextField(
             value = displayText,
