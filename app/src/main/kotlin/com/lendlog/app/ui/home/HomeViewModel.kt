@@ -28,7 +28,9 @@ data class HomeUiState(
         }
 
     val groupedByPerson: Map<String, List<Loan>>
-        get() = displayedLoans.groupBy { it.borrowerName }
+        get() = displayedLoans
+            .groupBy { it.borrowerName.trim().lowercase() }
+            .entries.associate { (_, loans) -> loans.first().borrowerName to loans }
 }
 
 @HiltViewModel
