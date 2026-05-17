@@ -15,7 +15,8 @@ data class DetailUiState(
     val loan: Loan? = null,
     val showDeleteDialog: Boolean = false,
     val showReturnDialog: Boolean = false,
-    val deleted: Boolean = false
+    val deleted: Boolean = false,
+    val showConfetti: Boolean = false
 )
 
 @HiltViewModel
@@ -55,7 +56,7 @@ class LoanDetailViewModel @Inject constructor(
         viewModelScope.launch {
             notificationScheduler.cancelForLoan(loanId)
             repository.markReturned(loanId)
-            _uiState.update { it.copy(showReturnDialog = false) }
+            _uiState.update { it.copy(showReturnDialog = false, showConfetti = true) }
         }
     }
 }

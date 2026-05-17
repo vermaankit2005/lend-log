@@ -123,6 +123,9 @@ dependencies {
     // Accompanist permissions
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 
+    // Konfetti confetti animation
+    implementation("nl.dionsegijn:konfetti-compose:2.0.4")
+
     // Material
     implementation("com.google.android.material:material:1.12.0")
 
