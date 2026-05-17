@@ -1,14 +1,20 @@
 package com.lendlog.app.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lendlog.app.R
+import com.lendlog.app.ui.theme.Brand
 import com.lendlog.app.ui.theme.Inter
 import com.lendlog.app.ui.theme.N800
 
@@ -26,37 +32,48 @@ fun LendLogTopBar(
                 if (onNavigateUp != null) {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
-                            imageVector = Icons.Outlined.ArrowBackIosNew,
+                            imageVector        = Icons.Outlined.ArrowBackIosNew,
                             contentDescription = "Back",
-                            modifier = Modifier.size(20.dp)
+                            modifier           = Modifier.size(20.dp)
                         )
                     }
                 }
             },
             title = {
                 if (showLogo) {
-                    Text(
-                        text = "LendLog",
-                        fontFamily = Inter,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
-                        letterSpacing = (-0.5).sp,
-                        color = N800
-                    )
+                    Row(
+                        verticalAlignment     = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            painter          = painterResource(R.drawable.ic_logo),
+                            contentDescription = null,
+                            colorFilter      = ColorFilter.tint(Brand),
+                            modifier         = Modifier.size(22.dp)
+                        )
+                        Text(
+                            text          = "LendLog",
+                            fontFamily    = Inter,
+                            fontWeight    = FontWeight.Bold,
+                            fontSize      = 22.sp,
+                            letterSpacing = (-0.5).sp,
+                            color         = N800
+                        )
+                    }
                 } else {
                     Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
+                        text      = title,
+                        style     = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color     = MaterialTheme.colorScheme.onBackground
                     )
                 }
             },
             actions = actions,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
+            colors  = TopAppBarDefaults.topAppBarColors(
+                containerColor             = MaterialTheme.colorScheme.background,
                 navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
-                actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                actionIconContentColor     = MaterialTheme.colorScheme.onBackground
             )
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
