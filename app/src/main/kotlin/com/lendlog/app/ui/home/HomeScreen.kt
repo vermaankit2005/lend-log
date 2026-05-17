@@ -255,10 +255,7 @@ private fun SwipeableReturnCard(
                     .padding(start = 20.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
-                AnimatedVisibility(
-                    visible = dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd,
-                    enter   = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 })
-                ) {
+                if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
                     Row(
                         verticalAlignment     = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
