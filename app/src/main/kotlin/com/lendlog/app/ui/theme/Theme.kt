@@ -11,10 +11,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary              = Ink,
+    primary              = Brand,
     onPrimary            = N0,
-    primaryContainer     = InkSoft,
-    onPrimaryContainer   = Ink,
+    primaryContainer     = BrandSoft,
+    onPrimaryContainer   = BrandDeep,
     secondary            = N100,
     onSecondary          = N800,
     secondaryContainer   = N100,
@@ -29,8 +29,8 @@ private val LightColorScheme = lightColorScheme(
     onSurface            = N800,
     surfaceVariant       = N100,
     onSurfaceVariant     = N500,
-    outline              = N200,
-    outlineVariant       = N200,
+    outline              = N100,
+    outlineVariant       = N100,
     error                = Danger,
     onError              = N0,
     errorContainer       = DangerSoft,

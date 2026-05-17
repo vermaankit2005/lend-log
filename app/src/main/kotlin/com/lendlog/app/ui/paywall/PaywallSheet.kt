@@ -3,8 +3,8 @@ package com.lendlog.app.ui.paywall
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AllInclusive
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,8 +14,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lendlog.app.billing.BillingManager
 import com.lendlog.app.ui.components.TealGradientButton
-import com.lendlog.app.ui.theme.MutedText
-import com.lendlog.app.ui.theme.TealPrimary
+import com.lendlog.app.ui.theme.*
+
+private val benefits = listOf(
+    "Unlimited active loans",
+    "Same private, local-only app",
+    "One-time payment, no subscription",
+    "Yours forever"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,83 +38,114 @@ fun PaywallSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        containerColor = MaterialTheme.colorScheme.surface
+        shape            = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        containerColor   = MaterialTheme.colorScheme.surface
     ) {
         Column(
-            modifier = Modifier
+            modifier            = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
+                .padding(horizontal = 28.dp)
+                .padding(bottom = 36.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
+            // Icon
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier         = Modifier
+                    .size(64.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.AllInclusive,
+                    imageVector        = Icons.Outlined.LockOpen,
                     contentDescription = null,
-                    tint = TealPrimary,
-                    modifier = Modifier.size(48.dp)
+                    tint               = Brand,
+                    modifier           = Modifier.size(48.dp)
                 )
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Dismiss")
-                }
             }
 
+            Spacer(Modifier.height(12.dp))
+
             Text(
-                text = "You've reached the limit",
-                style = MaterialTheme.typography.headlineMedium,
+                text      = "Unlock unlimited loans",
+                style     = MaterialTheme.typography.headlineSmall,
+                color     = N800,
                 textAlign = TextAlign.Center
             )
 
+            Spacer(Modifier.height(8.dp))
+
             Text(
-                text = "Free accounts can track up to 3 active loans.\nUnlock unlimited loans for a one-time payment.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MutedText,
-                textAlign = TextAlign.Center
+                text      = "You've filled your 3 free slots. Keep tracking everything you lend — no limits, ever.",
+                style     = MaterialTheme.typography.bodyMedium,
+                color     = N500,
+                textAlign = TextAlign.Center,
+                modifier  = Modifier.widthIn(max = 300.dp)
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            // Benefit bullets
+            Column(
+                modifier            = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                benefits.forEach { benefit ->
+                    Row(
+                        verticalAlignment     = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Outlined.Check,
+                            contentDescription = null,
+                            tint               = Brand,
+                            modifier           = Modifier.size(18.dp)
+                        )
+                        Text(
+                            text  = benefit,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = N700
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            TealGradientButton(
+                text    = if (isLoading) "Processing…" else "Unlock for \$2.99",
+                onClick = {
+                    isLoading = true
+                    billingManager.launchBillingFlow(
+                        onSuccess = { isLoading = false; onPurchased() },
+                        onFailure = { isLoading = false }
+                    )
+                },
+                enabled  = !isLoading,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(Modifier.height(4.dp))
 
-            TealGradientButton(
-                text = if (isLoading) "Processing…" else "Unlock for \$2.99",
-                onClick = {
-                    isLoading = true
-                    billingManager.launchBillingFlow(
-                        onSuccess = {
-                            isLoading = false
-                            onPurchased()
-                        },
-                        onFailure = { isLoading = false }
-                    )
-                },
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            TextButton(
-                onClick = {
-                    isLoading = true
-                    billingManager.restorePurchases(
-                        onRestored = {
-                            isLoading = false
-                            onPurchased()
-                        },
-                        onFailure = { isLoading = false }
-                    )
-                }
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment     = Alignment.CenterVertically
             ) {
-                Text("Restore purchase", color = MutedText)
-            }
-
-            TextButton(onClick = onDismiss) {
-                Text("Not now", color = MutedText)
+                TextButton(
+                    onClick = {
+                        isLoading = true
+                        billingManager.restorePurchases(
+                            onRestored = { isLoading = false; onPurchased() },
+                            onFailure  = { isLoading = false }
+                        )
+                    }
+                ) {
+                    Text("Restore purchase", style = MaterialTheme.typography.labelMedium, color = N400)
+                }
+                Text("·", color = N300, style = MaterialTheme.typography.labelMedium)
+                TextButton(onClick = onDismiss) {
+                    Text("Maybe later", style = MaterialTheme.typography.labelMedium, color = N400)
+                }
             }
         }
     }

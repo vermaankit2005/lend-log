@@ -23,27 +23,27 @@ fun EmptyState(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
+        modifier            = modifier
             .fillMaxWidth()
             .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Box(
-            modifier = Modifier
-                .size(64.dp)
-                .background(N100, CircleShape),
+            modifier         = Modifier
+                .size(80.dp)
+                .background(BrandSoft, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector        = icon,
                 contentDescription = null,
-                tint               = N500,
-                modifier           = Modifier.size(28.dp)
+                tint               = Brand,
+                modifier           = Modifier.size(36.dp)
             )
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(28.dp))
 
         Text(
             text      = title,
@@ -52,23 +52,23 @@ fun EmptyState(
             textAlign = TextAlign.Center
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
 
         Text(
             text      = body,
             style     = MaterialTheme.typography.bodyMedium,
             color     = N500,
             textAlign = TextAlign.Center,
-            modifier  = Modifier.widthIn(max = 260.dp)
+            modifier  = Modifier.widthIn(max = 280.dp)
         )
 
         if (ctaLabel != null && onCtaClick != null) {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
             Button(
-                onClick = onCtaClick,
+                onClick  = onCtaClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape    = RoundedCornerShape(12.dp),
-                colors   = ButtonDefaults.buttonColors(containerColor = Ink)
+                colors   = ButtonDefaults.buttonColors(containerColor = Brand)
             ) {
                 Text(ctaLabel, style = MaterialTheme.typography.labelLarge)
             }

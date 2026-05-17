@@ -18,6 +18,21 @@ data class HomeUiState(
     val activeLoanCount: Int = 0,
     val isUnlocked: Boolean = false
 ) {
+    private val now get() = System.currentTimeMillis()
+    private val threeDaysMs = 3L * 24 * 60 * 60 * 1000
+
+    val overdueLoans: List<Loan>
+        get() = loans.filter { it.isOverdue }
+            .sortedByDescending { now - it.returnDate }   // most overdue first
+
+    val dueSoonLoans: List<Loan>
+        get() = loans.filter { !it.isOverdue && (it.returnDate - now) < threeDaysMs }
+            .sortedBy { it.returnDate }                   // soonest first
+
+    val activeLoans: List<Loan>
+        get() = loans.filter { !it.isOverdue && (it.returnDate - now) >= threeDaysMs }
+            .sortedByDescending { it.lentDate }           // newest first
+
     val displayedLoans: List<Loan>
         get() {
             val filtered = when (filter) {
