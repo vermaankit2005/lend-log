@@ -143,15 +143,18 @@ fun AddLoanScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("New Loan", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = N800) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
-            )
+            Column {
+                TopAppBar(
+                    title = { Text("New Loan", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = N800) },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
+                )
+                HorizontalDivider(color = N200, thickness = 1.dp)
+            }
         },
         containerColor = N50
     ) { padding ->

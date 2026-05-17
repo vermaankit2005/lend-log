@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Base app theme — used after the splash screen dismisses -->
-    <style name="Theme.LendLog" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.LendLog" parent="Theme.Material3.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>

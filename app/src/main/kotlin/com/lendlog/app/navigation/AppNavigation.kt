@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -53,7 +53,7 @@ private data class NavItem(
 )
 
 private val navItems = listOf(
-    NavItem(Routes.HOME,     "Loans",    Icons.Filled.Home,     Icons.Outlined.Home),
+    NavItem(Routes.HOME,     "Loans",    Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
     NavItem(Routes.HISTORY,  "History",  Icons.Filled.History,  Icons.Outlined.History),
     NavItem(Routes.SETTINGS, "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
 )

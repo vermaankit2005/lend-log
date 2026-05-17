@@ -99,33 +99,36 @@ fun LoanDetailScreen(
             }
         },
         topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
-                    }
-                },
-                actions = {
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Outlined.MoreVert, contentDescription = "More", tint = N600)
+            Column {
+                TopAppBar(
+                    title = { },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
                         }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false },
-                            containerColor = N0
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Delete loan", color = Danger, style = MaterialTheme.typography.bodyMedium) },
-                                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = Danger, modifier = Modifier.size(18.dp)) },
-                                onClick = { showMenu = false; viewModel.showDeleteDialog() }
-                            )
+                    },
+                    actions = {
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Outlined.MoreVert, contentDescription = "More", tint = N600)
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                containerColor = N0
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Delete loan", color = Danger, style = MaterialTheme.typography.bodyMedium) },
+                                    leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = Danger, modifier = Modifier.size(18.dp)) },
+                                    onClick = { showMenu = false; viewModel.showDeleteDialog() }
+                                )
+                            }
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
-            )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
+                )
+                HorizontalDivider(color = N200, thickness = 1.dp)
+            }
         },
         containerColor = N50
     ) { padding ->
