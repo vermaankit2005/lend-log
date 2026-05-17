@@ -252,6 +252,53 @@ fun SettingsScreen(
 
             // ── BACKUP ────────────────────────────────────────────────────
             SectionHeader("BACKUP")
+
+            // Info card
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            "How backup works",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    Text(
+                        "LendLog automatically backs up your loans every night to a file called " +
+                        "lendlog-backup.json in your Downloads folder. The file stays on your " +
+                        "device — nothing is sent to the cloud.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        "If you switch phones or reinstall the app, tap Restore from backup and " +
+                        "pick that file to get all your loans back.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
             SettingsGroup {
                 if (uiState.lastBackupTimestamp != 0L) {
                     Row(
@@ -280,7 +327,7 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Upload,
                     iconTint = MaterialTheme.colorScheme.onBackground,
                     title = "Export backup now",
-                    subtitle = "Save to Downloads folder",
+                    subtitle = "Saves lendlog-backup.json to Downloads",
                     onClick = handleExport,
                     loading = uiState.isExporting
                 )
@@ -291,7 +338,7 @@ fun SettingsScreen(
                     icon = Icons.Outlined.Download,
                     iconTint = MaterialTheme.colorScheme.onBackground,
                     title = "Restore from backup",
-                    subtitle = "Pick a lendlog-backup.json file",
+                    subtitle = "Pick a lendlog-backup.json to import",
                     onClick = { restoreLauncher.launch(arrayOf("application/json", "*/*")) },
                     loading = uiState.isRestoring
                 )
