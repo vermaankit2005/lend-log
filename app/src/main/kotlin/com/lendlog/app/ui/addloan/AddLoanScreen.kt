@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun AddLoanScreen(
     onNavigateBack: () -> Unit,
-    onLoanSaved: (String) -> Unit,
+    onLoanSaved: () -> Unit,
     viewModel: AddLoanViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -53,7 +53,7 @@ fun AddLoanScreen(
     var showPhotoSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.savedLoanId) {
-        if (uiState.savedLoanId != null) onLoanSaved(uiState.savedLoanId!!)
+        if (uiState.savedLoanId != null) onLoanSaved()
     }
 
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
