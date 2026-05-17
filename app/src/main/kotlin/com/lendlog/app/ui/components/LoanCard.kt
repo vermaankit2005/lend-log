@@ -178,23 +178,20 @@ private fun DueDateRow(loan: Loan, isDueSoon: Boolean, accentColor: androidx.com
         Spacer(Modifier.width(6.dp))
         if (relativeText != null) {
             Text(
-                text                = relativeText,
-                style               = MaterialTheme.typography.labelMedium,
-                color               = textColor,
-                fontFeatureSettings = "tnum"
+                text  = relativeText,
+                style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                color = textColor
             )
             Text(
-                text                = " · $absDate",
-                style               = MaterialTheme.typography.bodySmall,
-                color               = N400,
-                fontFeatureSettings = "tnum"
+                text  = " · $absDate",
+                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
+                color = N400
             )
         } else {
             Text(
-                text                = absDate,
-                style               = MaterialTheme.typography.labelMedium,
-                color               = if (loan.isReturned) N400 else N500,
-                fontFeatureSettings = "tnum"
+                text  = absDate,
+                style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                color = if (loan.isReturned) N400 else N500
             )
         }
     }
