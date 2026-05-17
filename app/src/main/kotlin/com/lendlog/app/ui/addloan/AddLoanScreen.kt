@@ -32,6 +32,7 @@ import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.lendlog.app.ui.components.TealGradientButton
 import com.lendlog.app.ui.paywall.PaywallSheet
 import com.lendlog.app.ui.theme.*
 import com.lendlog.app.util.ContactPickerHelper
@@ -149,19 +150,6 @@ fun AddLoanScreen(
                         Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
                     }
                 },
-                actions = {
-                    TextButton(
-                        onClick = viewModel::saveLoan,
-                        enabled = uiState.isValid && !uiState.isSaving
-                    ) {
-                        Text(
-                            text = if (uiState.isSaving) "Saving…" else "Save",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (uiState.isValid && !uiState.isSaving) Ink else N400
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
             )
         },
@@ -245,7 +233,16 @@ fun AddLoanScreen(
                 leadingIcon = { Icon(Icons.Outlined.Tag, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) }
             )
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(8.dp))
+
+            TealGradientButton(
+                text = if (uiState.isSaving) "Saving…" else "Save Loan",
+                onClick = viewModel::saveLoan,
+                enabled = uiState.isValid && !uiState.isSaving,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(24.dp))
         }
     }
 }

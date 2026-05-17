@@ -1,16 +1,20 @@
 package com.lendlog.app.navigation
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -62,6 +66,22 @@ fun AppNavigation() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
+        floatingActionButton = {
+            if (currentRoute == Routes.HOME) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Routes.ADD_LOAN) },
+                    containerColor = Ink,
+                    contentColor = Color.White,
+                    shape = CircleShape,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 2.dp
+                    )
+                ) {
+                    Icon(Icons.Outlined.Add, contentDescription = "Add Loan", modifier = Modifier.size(26.dp))
+                }
+            }
+        },
         bottomBar = {
             if (currentRoute in bottomNavRoutes) {
                 Column {
@@ -128,7 +148,8 @@ fun AppNavigation() {
                 val loanId = backStack.arguments?.getString("loanId") ?: return@composable
                 LoanDetailScreen(
                     loanId         = loanId,
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAdd = { navController.navigate(Routes.ADD_LOAN) }
                 )
             }
 
