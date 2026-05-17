@@ -6,6 +6,14 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -296,52 +304,70 @@ private fun FormField(
 
 @Composable
 private fun PhotoDropzone(photoUri: String?, onClick: () -> Unit) {
-    if (photoUri != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(96.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .clickable(onClick = onClick)
-        ) {
-            AsyncImage(
-                model = photoUri,
-                contentDescription = "Loan photo",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+    AnimatedContent(
+        targetState = photoUri,
+        transitionSpec = {
+            if (targetState != null) {
+                (scaleIn(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness    = Spring.StiffnessMedium
+                    ),
+                    initialScale = 0.85f
+                ) + fadeIn()) togetherWith (scaleOut(targetScale = 0.85f) + fadeOut())
+            } else {
+                fadeIn() togetherWith (scaleOut(targetScale = 0.85f) + fadeOut())
+            }
+        },
+        label = "photoDropzone"
+    ) { uri ->
+        if (uri != null) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(6.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .fillMaxWidth()
+                    .height(96.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onClick)
             ) {
-                Text("Change", style = MaterialTheme.typography.labelSmall, color = Color.White)
+                AsyncImage(
+                    model = uri,
+                    contentDescription = "Loan photo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text("Change", style = MaterialTheme.typography.labelSmall, color = Color.White)
+                }
             }
-        }
-    } else {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
-                .background(N50, RoundedCornerShape(12.dp))
-                .border(1.dp, N300, RoundedCornerShape(12.dp))
-                .clip(RoundedCornerShape(12.dp))
-                .clickable(onClick = onClick)
-                .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Icon(
-                Icons.Outlined.AddAPhoto,
-                contentDescription = null,
-                tint = N400,
-                modifier = Modifier.size(24.dp)
-            )
-            Column {
-                Text("Add a photo", style = MaterialTheme.typography.labelLarge, color = N600)
-                Text("Optional", style = MaterialTheme.typography.bodySmall, color = N400)
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+                    .background(N50, RoundedCornerShape(12.dp))
+                    .border(1.dp, N300, RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.AddAPhoto,
+                    contentDescription = null,
+                    tint = N400,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column {
+                    Text("Add a photo", style = MaterialTheme.typography.labelLarge, color = N600)
+                    Text("Optional", style = MaterialTheme.typography.bodySmall, color = N400)
+                }
             }
         }
     }
