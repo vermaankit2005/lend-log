@@ -30,7 +30,6 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.lendlog.app.BuildConfig
 import com.lendlog.app.ui.components.LendLogTopBar
 import com.lendlog.app.ui.paywall.PaywallSheet
-import com.lendlog.app.ui.theme.ThemeMode
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -158,63 +157,6 @@ fun SettingsScreen(
                         subtitle = "One-time payment of \$2.99",
                         onClick = viewModel::showPaywall
                     )
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // ── APPEARANCE ────────────────────────────────────────────────
-            SectionHeader("APPEARANCE")
-            SettingsGroup {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.Palette,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Column {
-                            Text(
-                                "Theme",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                "Controls app appearance",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        listOf(ThemeMode.SYSTEM, ThemeMode.LIGHT, ThemeMode.DARK).forEachIndexed { i, mode ->
-                            SegmentedButton(
-                                selected = uiState.themeMode == mode,
-                                onClick = { viewModel.setThemeMode(mode) },
-                                shape = SegmentedButtonDefaults.itemShape(index = i, count = 3),
-                                icon = {}
-                            ) {
-                                Text(
-                                    text = when (mode) {
-                                        ThemeMode.SYSTEM -> "System"
-                                        ThemeMode.LIGHT  -> "Light"
-                                        ThemeMode.DARK   -> "Dark"
-                                    },
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            }
-                        }
-                    }
                 }
             }
 

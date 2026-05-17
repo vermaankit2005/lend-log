@@ -3,7 +3,6 @@ package com.lendlog.app.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lendlog.app.data.repository.LoanRepository
-import com.lendlog.app.ui.theme.ThemeMode
 import com.lendlog.app.worker.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -13,7 +12,6 @@ import javax.inject.Inject
 data class SettingsUiState(
     val isUnlocked: Boolean = false,
     val showPaywall: Boolean = false,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true,
     val reminderDays: Int = 3,
     val lastBackupTimestamp: Long = 0L,
@@ -36,24 +34,18 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 repository.isUnlocked,
-                repository.themeMode,
                 repository.notificationsEnabled,
                 repository.reminderDays,
                 repository.lastBackupTimestamp
-            ) { unlocked, theme, notif, days, ts ->
+            ) { unlocked, notif, days, ts ->
                 _uiState.value.copy(
                     isUnlocked           = unlocked,
-                    themeMode            = ThemeMode.valueOf(theme),
                     notificationsEnabled = notif,
                     reminderDays         = days,
                     lastBackupTimestamp  = ts
                 )
             }.collect { state -> _uiState.value = state }
         }
-    }
-
-    fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch { repository.setThemeMode(mode.name) }
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
