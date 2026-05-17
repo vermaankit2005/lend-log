@@ -41,6 +41,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -183,6 +186,7 @@ fun AddLoanScreen(
                 value = uiState.borrowerName,
                 onValueChange = { viewModel.updateBorrower(it) },
                 placeholder = "Borrower's name",
+                capitalization = KeyboardCapitalization.Words,
                 leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     TextButton(
@@ -204,10 +208,21 @@ fun AddLoanScreen(
             )
 
             DateField(
-                selectedDate    = uiState.returnDate,
-                onDateSelected  = viewModel::updateReturnDate,
-                context         = context,
-                allowPastDates  = uiState.isEditMode
+                selectedDate     = uiState.lentDate,
+                onDateSelected   = viewModel::updateLentDate,
+                context          = context,
+                label            = "Date lent",
+                allowPastDates   = true,
+                allowFutureDates = false
+            )
+
+            DateField(
+                selectedDate   = uiState.returnDate,
+                onDateSelected = viewModel::updateReturnDate,
+                context        = context,
+                label          = "Return by",
+                placeholder    = "Pick a return date",
+                allowPastDates = uiState.isEditMode
             )
             QuickDateChips(onDateSelected = viewModel::updateReturnDate)
 
@@ -224,6 +239,7 @@ fun AddLoanScreen(
                 value = uiState.tags,
                 onValueChange = viewModel::updateTags,
                 placeholder = "Tags: book, tools, electronics…",
+                capitalization = KeyboardCapitalization.None,
                 leadingIcon = { Icon(Icons.Outlined.Tag, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) }
             )
 
@@ -250,7 +266,8 @@ private fun FormField(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     minLines: Int = 1,
-    maxLines: Int = 1
+    maxLines: Int = 1,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences
 ) {
     OutlinedTextField(
         value = value,
@@ -261,6 +278,7 @@ private fun FormField(
         singleLine = maxLines == 1,
         minLines = minLines,
         maxLines = maxLines,
+        keyboardOptions = KeyboardOptions(capitalization = capitalization),
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier.fillMaxWidth(),
         textStyle = MaterialTheme.typography.bodyMedium,
@@ -354,7 +372,10 @@ private fun DateField(
     selectedDate: Long?,
     onDateSelected: (Long) -> Unit,
     context: Context,
-    allowPastDates: Boolean = false
+    label: String,
+    placeholder: String = "Select a date",
+    allowPastDates: Boolean = false,
+    allowFutureDates: Boolean = true
 ) {
     val calendar = Calendar.getInstance()
     val now = System.currentTimeMillis()
@@ -363,13 +384,18 @@ private fun DateField(
         val absDate = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(date))
         val daysUntil = TimeUnit.MILLISECONDS.toDays(date - now)
         val relText = when {
-            daysUntil < 0  -> "overdue"
+            !allowFutureDates -> when {
+                daysUntil == 0L  -> "today"
+                daysUntil == -1L -> "yesterday"
+                else             -> null
+            }
+            daysUntil < 0   -> "overdue"
             daysUntil == 0L -> "today"
             daysUntil == 1L -> "tomorrow"
-            else           -> "in $daysUntil days"
+            else            -> "in $daysUntil days"
         }
-        "$absDate · $relText"
-    } ?: "Select a date"
+        if (relText != null) "$absDate · $relText" else absDate
+    } ?: ""
 
     Box(modifier = Modifier.fillMaxWidth().clickable {
         DatePickerDialog(
@@ -381,13 +407,18 @@ private fun DateField(
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
-        ).apply { if (!allowPastDates) datePicker.minDate = System.currentTimeMillis() }.show()
+        ).apply {
+            if (!allowPastDates) datePicker.minDate = System.currentTimeMillis()
+            if (!allowFutureDates) datePicker.maxDate = System.currentTimeMillis()
+        }.show()
     }) {
         OutlinedTextField(
             value = displayText,
             onValueChange = {},
             readOnly = true,
             enabled = false,
+            label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+            placeholder = { Text(placeholder, style = MaterialTheme.typography.bodyMedium) },
             leadingIcon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null, modifier = Modifier.size(20.dp)) },
             trailingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = null) },
             shape = RoundedCornerShape(10.dp),
@@ -396,7 +427,8 @@ private fun DateField(
             colors = OutlinedTextFieldDefaults.colors(
                 disabledContainerColor = N0,
                 disabledBorderColor = N200,
-                disabledTextColor = if (selectedDate != null) N800 else N400,
+                disabledLabelColor = N400,
+                disabledTextColor = N800,
                 disabledLeadingIconColor = N400,
                 disabledTrailingIconColor = N400,
                 disabledPlaceholderColor = N400

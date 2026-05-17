@@ -192,7 +192,7 @@ private fun StatusAndItemLine(loan: Loan, isDueSoon: Boolean) {
         loan.isReturned -> "Returned" to N400
         loan.isOverdue  -> "Overdue ${-daysDiff} day${if (-daysDiff != 1) "s" else ""}" to Danger
         isDueSoon && daysDiff == 0 -> "Due today" to Warning
-        isDueSoon       -> "Due in ${daysDiff + 1} day${if (daysDiff + 1 != 1) "s" else ""}" to Warning
+        isDueSoon       -> "Due in $daysDiff day${if (daysDiff != 1) "s" else ""}" to Warning
         else            -> {
             val absDate = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(loan.returnDate))
             "Due $absDate" to N500

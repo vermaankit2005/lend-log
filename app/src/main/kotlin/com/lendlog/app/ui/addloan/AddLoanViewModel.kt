@@ -18,6 +18,7 @@ data class AddLoanUiState(
     val borrowerName: String = "",
     val borrowerContactId: String? = null,
     val borrowerPhone: String? = null,
+    val lentDate: Long = System.currentTimeMillis(),
     val returnDate: Long? = null,
     val tags: String = "",
     val isSaving: Boolean = false,
@@ -54,6 +55,7 @@ class AddLoanViewModel @Inject constructor(
                             borrowerName = loan.borrowerName,
                             borrowerContactId = loan.borrowerContactId,
                             borrowerPhone = loan.borrowerPhone,
+                            lentDate = loan.lentDate,
                             returnDate = loan.returnDate,
                             tags = loan.tags
                         )
@@ -68,6 +70,7 @@ class AddLoanViewModel @Inject constructor(
     fun updatePhotoUri(uri: String?) = _uiState.update { it.copy(photoUri = uri) }
     fun updateBorrower(name: String, contactId: String? = null, phone: String? = null) =
         _uiState.update { it.copy(borrowerName = name, borrowerContactId = contactId, borrowerPhone = phone) }
+    fun updateLentDate(epochMillis: Long) = _uiState.update { it.copy(lentDate = epochMillis) }
     fun updateReturnDate(epochMillis: Long) = _uiState.update { it.copy(returnDate = epochMillis) }
     fun updateTags(value: String) = _uiState.update { it.copy(tags = value) }
     fun clearError() = _uiState.update { it.copy(error = null) }
@@ -105,6 +108,7 @@ class AddLoanViewModel @Inject constructor(
                 borrowerName = state.borrowerName.trim().titleCase(),
                 borrowerContactId = state.borrowerContactId,
                 borrowerPhone = state.borrowerPhone,
+                lentDate = state.lentDate,
                 returnDate = state.returnDate!!,
                 tags = state.tags.trim()
             )
@@ -122,6 +126,7 @@ class AddLoanViewModel @Inject constructor(
                 borrowerName = state.borrowerName.trim().titleCase(),
                 borrowerContactId = state.borrowerContactId,
                 borrowerPhone = state.borrowerPhone,
+                lentDate = state.lentDate,
                 returnDate = state.returnDate!!,
                 tags = state.tags.trim()
             )
