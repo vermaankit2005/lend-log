@@ -211,16 +211,18 @@ fun AddLoanScreen(
                 selectedDate     = uiState.lentDate,
                 onDateSelected   = viewModel::updateLentDate,
                 context          = context,
-                placeholder      = "Lent on",
+                label            = "Date lent",
                 allowPastDates   = true,
                 allowFutureDates = false
             )
 
             DateField(
-                selectedDate    = uiState.returnDate,
-                onDateSelected  = viewModel::updateReturnDate,
-                context         = context,
-                allowPastDates  = uiState.isEditMode
+                selectedDate   = uiState.returnDate,
+                onDateSelected = viewModel::updateReturnDate,
+                context        = context,
+                label          = "Return by",
+                placeholder    = "Pick a return date",
+                allowPastDates = uiState.isEditMode
             )
             QuickDateChips(onDateSelected = viewModel::updateReturnDate)
 
@@ -370,6 +372,7 @@ private fun DateField(
     selectedDate: Long?,
     onDateSelected: (Long) -> Unit,
     context: Context,
+    label: String,
     placeholder: String = "Select a date",
     allowPastDates: Boolean = false,
     allowFutureDates: Boolean = true
@@ -392,7 +395,7 @@ private fun DateField(
             else            -> "in $daysUntil days"
         }
         if (relText != null) "$absDate · $relText" else absDate
-    } ?: placeholder
+    } ?: ""
 
     Box(modifier = Modifier.fillMaxWidth().clickable {
         DatePickerDialog(
@@ -414,6 +417,8 @@ private fun DateField(
             onValueChange = {},
             readOnly = true,
             enabled = false,
+            label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+            placeholder = { Text(placeholder, style = MaterialTheme.typography.bodyMedium) },
             leadingIcon = { Icon(Icons.Outlined.CalendarMonth, contentDescription = null, modifier = Modifier.size(20.dp)) },
             trailingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = null) },
             shape = RoundedCornerShape(10.dp),
@@ -422,7 +427,8 @@ private fun DateField(
             colors = OutlinedTextFieldDefaults.colors(
                 disabledContainerColor = N0,
                 disabledBorderColor = N200,
-                disabledTextColor = if (selectedDate != null) N800 else N400,
+                disabledLabelColor = N400,
+                disabledTextColor = N800,
                 disabledLeadingIconColor = N400,
                 disabledTrailingIconColor = N400,
                 disabledPlaceholderColor = N400
