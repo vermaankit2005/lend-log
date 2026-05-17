@@ -164,18 +164,14 @@ fun AddLoanScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Photo
-            FormSection("PHOTO")
             PhotoDropzone(
                 photoUri = uiState.photoUri,
                 onClick = { showPhotoSheet = true }
             )
 
-            // Item name
-            FormSection("WHAT")
             FormField(
                 value = uiState.itemName,
                 onValueChange = viewModel::updateItemName,
@@ -183,8 +179,6 @@ fun AddLoanScreen(
                 leadingIcon = { Icon(Icons.Outlined.Inventory2, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) }
             )
 
-            // Borrower
-            FormSection("TO WHOM")
             FormField(
                 value = uiState.borrowerName,
                 onValueChange = { viewModel.updateBorrower(it) },
@@ -209,8 +203,6 @@ fun AddLoanScreen(
                 }
             )
 
-            // Return date
-            FormSection("WHEN DUE")
             DateField(
                 selectedDate   = uiState.returnDate,
                 onDateSelected = viewModel::updateReturnDate,
@@ -218,27 +210,21 @@ fun AddLoanScreen(
             )
             QuickDateChips(onDateSelected = viewModel::updateReturnDate)
 
-            // Notes
-            FormSection("NOTES")
             FormField(
                 value = uiState.notes,
                 onValueChange = viewModel::updateNotes,
-                placeholder = "Any notes (optional)",
-                minLines = 3,
-                maxLines = 5,
+                placeholder = "Notes (optional)",
+                minLines = 2,
+                maxLines = 3,
                 leadingIcon = { Icon(Icons.Outlined.Notes, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) }
             )
 
-            // Tags
-            FormSection("TAGS")
             FormField(
                 value = uiState.tags,
                 onValueChange = viewModel::updateTags,
-                placeholder = "e.g. book, tools, electronics",
+                placeholder = "Tags: book, tools, electronics…",
                 leadingIcon = { Icon(Icons.Outlined.Tag, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) }
             )
-
-            Spacer(Modifier.height(8.dp))
 
             TealGradientButton(
                 text = if (uiState.isSaving) "Saving…" else "Save Loan",
@@ -246,20 +232,8 @@ fun AddLoanScreen(
                 enabled = uiState.isValid && !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(Modifier.height(24.dp))
         }
     }
-}
-
-@Composable
-private fun FormSection(label: String) {
-    Text(
-        text = label,
-        style = MaterialTheme.typography.labelSmall,
-        color = N500,
-        letterSpacing = MaterialTheme.typography.labelSmall.letterSpacing
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -303,7 +277,7 @@ private fun PhotoDropzone(photoUri: String?, onClick: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(160.dp)
+                .height(96.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable(onClick = onClick)
         ) {
@@ -324,26 +298,25 @@ private fun PhotoDropzone(photoUri: String?, onClick: () -> Unit) {
             }
         }
     } else {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(160.dp)
+                .height(72.dp)
                 .background(N50, RoundedCornerShape(12.dp))
                 .border(1.dp, N300, RoundedCornerShape(12.dp))
                 .clip(RoundedCornerShape(12.dp))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
+                .clickable(onClick = onClick)
+                .padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    Icons.Outlined.AddAPhoto,
-                    contentDescription = null,
-                    tint = N400,
-                    modifier = Modifier.size(28.dp)
-                )
+            Icon(
+                Icons.Outlined.AddAPhoto,
+                contentDescription = null,
+                tint = N400,
+                modifier = Modifier.size(24.dp)
+            )
+            Column {
                 Text("Add a photo", style = MaterialTheme.typography.labelLarge, color = N600)
                 Text("Optional", style = MaterialTheme.typography.bodySmall, color = N400)
             }
