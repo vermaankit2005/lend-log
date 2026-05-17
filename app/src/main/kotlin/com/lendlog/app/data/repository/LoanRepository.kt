@@ -69,6 +69,7 @@ class LoanRepository @Inject constructor(
         borrowerName: String,
         borrowerContactId: String?,
         borrowerPhone: String?,
+        lentDate: Long,
         returnDate: Long,
         tags: String
     ) = Loan(
@@ -80,7 +81,7 @@ class LoanRepository @Inject constructor(
         borrowerContactId = borrowerContactId,
         borrowerPhone = borrowerPhone,
         returnDate = returnDate,
-        lentDate = System.currentTimeMillis(),
+        lentDate = lentDate,
         isReturned = false,
         returnedDate = null,
         tags = tags,

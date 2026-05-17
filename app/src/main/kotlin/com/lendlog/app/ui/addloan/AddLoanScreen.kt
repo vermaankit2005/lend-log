@@ -204,6 +204,15 @@ fun AddLoanScreen(
             )
 
             DateField(
+                selectedDate     = uiState.lentDate,
+                onDateSelected   = viewModel::updateLentDate,
+                context          = context,
+                placeholder      = "Lent on",
+                allowPastDates   = true,
+                allowFutureDates = false
+            )
+
+            DateField(
                 selectedDate    = uiState.returnDate,
                 onDateSelected  = viewModel::updateReturnDate,
                 context         = context,
@@ -354,7 +363,9 @@ private fun DateField(
     selectedDate: Long?,
     onDateSelected: (Long) -> Unit,
     context: Context,
-    allowPastDates: Boolean = false
+    placeholder: String = "Select a date",
+    allowPastDates: Boolean = false,
+    allowFutureDates: Boolean = true
 ) {
     val calendar = Calendar.getInstance()
     val now = System.currentTimeMillis()
@@ -363,13 +374,18 @@ private fun DateField(
         val absDate = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(date))
         val daysUntil = TimeUnit.MILLISECONDS.toDays(date - now)
         val relText = when {
-            daysUntil < 0  -> "overdue"
+            !allowFutureDates -> when {
+                daysUntil == 0L  -> "today"
+                daysUntil == -1L -> "yesterday"
+                else             -> null
+            }
+            daysUntil < 0   -> "overdue"
             daysUntil == 0L -> "today"
             daysUntil == 1L -> "tomorrow"
-            else           -> "in $daysUntil days"
+            else            -> "in $daysUntil days"
         }
-        "$absDate · $relText"
-    } ?: "Select a date"
+        if (relText != null) "$absDate · $relText" else absDate
+    } ?: placeholder
 
     Box(modifier = Modifier.fillMaxWidth().clickable {
         DatePickerDialog(
@@ -381,7 +397,10 @@ private fun DateField(
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
-        ).apply { if (!allowPastDates) datePicker.minDate = System.currentTimeMillis() }.show()
+        ).apply {
+            if (!allowPastDates) datePicker.minDate = System.currentTimeMillis()
+            if (!allowFutureDates) datePicker.maxDate = System.currentTimeMillis()
+        }.show()
     }) {
         OutlinedTextField(
             value = displayText,
