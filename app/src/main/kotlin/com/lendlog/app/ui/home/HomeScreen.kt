@@ -5,9 +5,11 @@ import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -50,45 +52,28 @@ fun HomeScreen(
                 .padding(padding)
                 .padding(bottom = bottomPadding.calculateBottomPadding())
         ) {
-            // View toggle
             FeedToggle(
-                feedView = uiState.feedView,
+                feedView      = uiState.feedView,
                 onFeedViewChange = viewModel::setFeedView
             )
 
-            // Summary + overdue filter
-            if (uiState.loans.isNotEmpty()) {
-                SummaryRow(
-                    totalCount = uiState.loans.size,
-                    overdueCount = uiState.loans.count { it.isOverdue },
-                    filter = uiState.filter,
-                    onFilterChange = viewModel::setFilter
-                )
-            }
-
             if (uiState.loans.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier         = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyState(
-                        icon = Icons.Outlined.Inventory2,
-                        title = "No active loans",
-                        body = "When you lend something, it'll show up here so you don't forget.",
-                        ctaLabel = "Add a loan",
+                        icon      = Icons.Outlined.Inventory2,
+                        title     = "Nothing lent out",
+                        body      = "Snap a photo when you lend something — we'll remind you when it's due back.",
+                        ctaLabel  = "Log your first loan",
                         onCtaClick = onNavigateToAdd
                     )
                 }
             } else {
                 when (uiState.feedView) {
-                    FeedView.BY_ITEM -> ByItemFeed(
-                        loans = uiState.displayedLoans,
-                        onLoanClick = onNavigateToDetail
-                    )
-                    FeedView.BY_PERSON -> ByPersonFeed(
-                        grouped = uiState.groupedByPerson,
-                        onLoanClick = onNavigateToDetail
-                    )
+                    FeedView.BY_ITEM   -> ByItemFeed(uiState = uiState, onLoanClick = onNavigateToDetail)
+                    FeedView.BY_PERSON -> ByPersonFeed(grouped = uiState.groupedByPerson, onLoanClick = onNavigateToDetail)
                 }
             }
         }
@@ -96,10 +81,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun FeedToggle(
-    feedView: FeedView,
-    onFeedViewChange: (FeedView) -> Unit
-) {
+private fun FeedToggle(feedView: FeedView, onFeedViewChange: (FeedView) -> Unit) {
     SingleChoiceSegmentedButtonRow(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,124 +89,173 @@ private fun FeedToggle(
     ) {
         SegmentedButton(
             selected = feedView == FeedView.BY_ITEM,
-            onClick = { onFeedViewChange(FeedView.BY_ITEM) },
-            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-            colors = SegmentedButtonDefaults.colors(
-                activeContainerColor = InkSoft,
-                activeContentColor = Ink,
-                activeBorderColor = Ink
+            onClick  = { onFeedViewChange(FeedView.BY_ITEM) },
+            shape    = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+            colors   = SegmentedButtonDefaults.colors(
+                activeContainerColor = BrandSoft,
+                activeContentColor   = BrandDeep,
+                activeBorderColor    = Brand
             ),
             icon = {}
-        ) {
-            Text("By Item", style = MaterialTheme.typography.labelLarge)
-        }
+        ) { Text("By Item", style = MaterialTheme.typography.labelLarge) }
+
         SegmentedButton(
             selected = feedView == FeedView.BY_PERSON,
-            onClick = { onFeedViewChange(FeedView.BY_PERSON) },
-            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-            colors = SegmentedButtonDefaults.colors(
-                activeContainerColor = InkSoft,
-                activeContentColor = Ink,
-                activeBorderColor = Ink
+            onClick  = { onFeedViewChange(FeedView.BY_PERSON) },
+            shape    = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+            colors   = SegmentedButtonDefaults.colors(
+                activeContainerColor = BrandSoft,
+                activeContentColor   = BrandDeep,
+                activeBorderColor    = Brand
             ),
             icon = {}
-        ) {
-            Text("By Person", style = MaterialTheme.typography.labelLarge)
-        }
+        ) { Text("By Person", style = MaterialTheme.typography.labelLarge) }
     }
 }
 
 @Composable
-private fun SummaryRow(
-    totalCount: Int,
-    overdueCount: Int,
-    filter: FilterType,
-    onFilterChange: (FilterType) -> Unit
-) {
+private fun SectionHeader(label: String, count: Int, dotColor: androidx.compose.ui.graphics.Color? = null) {
     Row(
-        modifier = Modifier
+        modifier          = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(top = 20.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = "$totalCount active",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (overdueCount > 0) {
-                Text("·", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-                Text(
-                    text = "$overdueCount overdue",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Danger,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-
-        if (overdueCount > 0) {
-            FilterChip(
-                selected = filter == FilterType.OVERDUE,
-                onClick = {
-                    onFilterChange(if (filter == FilterType.OVERDUE) FilterType.ALL else FilterType.OVERDUE)
-                },
-                label = { Text("Overdue only", style = MaterialTheme.typography.labelMedium) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = DangerSoft,
-                    selectedLabelColor = Danger
-                )
+        if (dotColor != null) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(dotColor, CircleShape)
             )
         }
+        Text(
+            text  = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = N500,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text  = "($count)",
+            style = MaterialTheme.typography.labelSmall,
+            color = N400
+        )
     }
 }
 
 @Composable
-private fun ByItemFeed(loans: List<Loan>, onLoanClick: (String) -> Unit) {
+private fun ByItemFeed(uiState: HomeUiState, onLoanClick: (String) -> Unit) {
+    val overdueLoans = uiState.overdueLoans
+    val dueSoonLoans = uiState.dueSoonLoans
+    val activeLoans  = uiState.activeLoans
+
     LazyColumn(
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp, ),
+        contentPadding      = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        itemsIndexed(loans, key = { _, loan -> loan.id }) { index, loan ->
-            var visible by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) {
-                delay(minOf(index * 40L, 240L))
-                visible = true
+        // OVERDUE section
+        if (overdueLoans.isNotEmpty()) {
+            item(key = "header_overdue") {
+                SectionHeader(label = "Overdue", count = overdueLoans.size, dotColor = Danger)
             }
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 })
-            ) {
-                LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
+            itemsIndexed(overdueLoans, key = { _, loan -> "overdue_${loan.id}" }) { index, loan ->
+                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick)
             }
         }
+
+        // DUE SOON section
+        if (dueSoonLoans.isNotEmpty()) {
+            item(key = "header_due_soon") {
+                SectionHeader(label = "Due Soon", count = dueSoonLoans.size, dotColor = Warning)
+            }
+            itemsIndexed(dueSoonLoans, key = { _, loan -> "soon_${loan.id}" }) { index, loan ->
+                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick)
+            }
+        }
+
+        // ACTIVE section
+        if (activeLoans.isNotEmpty()) {
+            item(key = "header_active") {
+                SectionHeader(label = "Active", count = activeLoans.size)
+            }
+            itemsIndexed(activeLoans, key = { _, loan -> "active_${loan.id}" }) { index, loan ->
+                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick)
+            }
+        }
+
         item { Spacer(Modifier.height(80.dp)) }
+    }
+}
+
+@Composable
+private fun AnimatedLoanCard(index: Int, loan: Loan, onLoanClick: (String) -> Unit) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(minOf(index * 40L, 240L))
+        visible = true
+    }
+    AnimatedVisibility(
+        visible = visible,
+        enter   = fadeIn() + slideInVertically(initialOffsetY = { it / 4 })
+    ) {
+        LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
     }
 }
 
 @Composable
 private fun ByPersonFeed(grouped: Map<String, List<Loan>>, onLoanClick: (String) -> Unit) {
     LazyColumn(
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+        contentPadding      = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         grouped.forEach { (person, loans) ->
             item(key = "header_$person") {
-                Text(
-                    text = person.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
-                )
+                PersonGroupHeader(person = person, loans = loans)
             }
             itemsIndexed(loans, key = { _, loan -> loan.id }) { _, loan ->
                 LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
             }
         }
         item { Spacer(Modifier.height(80.dp)) }
+    }
+}
+
+@Composable
+private fun PersonGroupHeader(person: String, loans: List<Loan>) {
+    val overdueCount = loans.count { it.isOverdue }
+    Row(
+        modifier          = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text  = person.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = N500,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text  = "${loans.size} item${if (loans.size != 1) "s" else ""}",
+                style = MaterialTheme.typography.labelSmall,
+                color = N400
+            )
+        }
+        if (overdueCount > 0) {
+            Surface(color = DangerSoft, shape = MaterialTheme.shapes.small) {
+                Text(
+                    text     = "$overdueCount overdue",
+                    style    = MaterialTheme.typography.labelSmall,
+                    color    = Danger,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+            }
+        }
     }
 }
 

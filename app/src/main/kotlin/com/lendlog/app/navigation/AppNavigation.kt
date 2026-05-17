@@ -68,13 +68,13 @@ fun AppNavigation() {
         floatingActionButton = {
             if (currentRoute == Routes.HOME) {
                 FloatingActionButton(
-                    onClick = { navController.navigate(Routes.ADD_LOAN) },
-                    containerColor = Ink,
-                    contentColor = Color.White,
-                    shape = CircleShape,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 2.dp
+                    onClick        = { navController.navigate(Routes.ADD_LOAN) },
+                    containerColor = Ink,          // Ink is now Brand (teal)
+                    contentColor   = Color.White,
+                    shape          = CircleShape,
+                    elevation      = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 4.dp,
+                        pressedElevation = 8.dp
                     )
                 ) {
                     Icon(Icons.Outlined.Add, contentDescription = "Add Loan", modifier = Modifier.size(26.dp))
@@ -111,9 +111,9 @@ fun AppNavigation() {
                                 },
                                 label  = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor   = MaterialTheme.colorScheme.onBackground,
-                                    selectedTextColor   = MaterialTheme.colorScheme.onBackground,
-                                    indicatorColor      = Color.Transparent,
+                                    selectedIconColor   = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor   = MaterialTheme.colorScheme.primary,
+                                    indicatorColor      = MaterialTheme.colorScheme.primaryContainer,
                                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

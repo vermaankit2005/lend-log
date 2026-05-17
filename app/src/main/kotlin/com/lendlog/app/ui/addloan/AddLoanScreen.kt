@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -211,10 +212,11 @@ fun AddLoanScreen(
             // Return date
             FormSection("WHEN DUE")
             DateField(
-                selectedDate = uiState.returnDate,
+                selectedDate   = uiState.returnDate,
                 onDateSelected = viewModel::updateReturnDate,
-                context = context
+                context        = context
             )
+            QuickDateChips(onDateSelected = viewModel::updateReturnDate)
 
             // Notes
             FormSection("NOTES")
@@ -421,6 +423,32 @@ private fun DateField(
                 disabledPlaceholderColor = N400
             )
         )
+    }
+}
+
+@Composable
+private fun QuickDateChips(onDateSelected: (Long) -> Unit) {
+    val chips = listOf(
+        "3 days"  to 3,
+        "1 week"  to 7,
+        "2 weeks" to 14,
+        "1 month" to 30,
+    )
+    Row(
+        modifier              = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        chips.forEach { (label, days) ->
+            val epochMs = System.currentTimeMillis() + days.toLong() * 24 * 60 * 60 * 1000
+            SuggestionChip(
+                onClick = { onDateSelected(epochMs) },
+                label   = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                colors  = SuggestionChipDefaults.suggestionChipColors(
+                    containerColor = BrandSoft,
+                    labelColor     = BrandDeep
+                )
+            )
+        }
     }
 }
 
