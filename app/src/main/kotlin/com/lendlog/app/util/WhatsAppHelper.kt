@@ -1,5 +1,6 @@
 package com.lendlog.app.util
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -10,25 +11,19 @@ object WhatsAppHelper {
     fun sendNudge(context: Context, phone: String, itemName: String) {
         val cleanPhone = phone.replace(Regex("[^\\d+]"), "")
         val message = "Hey! Just a reminder — you still have my $itemName. Would love to get it back soon 😊"
-        val encoded = Uri.encode(message)
+        val url = "https://wa.me/$cleanPhone?text=${Uri.encode(message)}"
 
-        val whatsappIntent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse("https://wa.me/$cleanPhone?text=$encoded")
-            setPackage("com.whatsapp")
+        // Try WhatsApp then WhatsApp Business; fall back to browser
+        for (pkg in listOf("com.whatsapp", "com.whatsapp.w4b")) {
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply { setPackage(pkg) })
+                return
+            } catch (_: ActivityNotFoundException) { }
         }
-
-        if (whatsappIntent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(whatsappIntent)
-        } else {
-            // Fallback: open WhatsApp web in browser
-            val fallback = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("https://wa.me/$cleanPhone?text=$encoded")
-            }
-            if (fallback.resolveActivity(context.packageManager) != null) {
-                context.startActivity(fallback)
-            } else {
-                Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
-            }
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
         }
     }
 }
