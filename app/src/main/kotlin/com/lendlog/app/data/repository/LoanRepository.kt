@@ -1,5 +1,6 @@
 package com.lendlog.app.data.repository
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.os.Build
@@ -94,14 +95,37 @@ class LoanRepository @Inject constructor(
             val json = Json { prettyPrint = true }.encodeToString(loans)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val resolver = context.contentResolver
+
+                // Delete any existing backup file to avoid duplicates
+                resolver.query(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    arrayOf(MediaStore.Downloads._ID),
+                    "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                    arrayOf("lendlog-backup.json"),
+                    null
+                )?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(0)
+                        resolver.delete(
+                            ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id),
+                            null, null
+                        )
+                    }
+                }
+
                 val values = ContentValues().apply {
                     put(MediaStore.Downloads.DISPLAY_NAME, "lendlog-backup.json")
                     put(MediaStore.Downloads.MIME_TYPE, "application/json")
+                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                     put(MediaStore.Downloads.IS_PENDING, 1)
                 }
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
                     ?: return false
-                resolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
+                val stream = resolver.openOutputStream(uri) ?: run {
+                    resolver.delete(uri, null, null)
+                    return false
+                }
+                stream.bufferedWriter().use { it.write(json) }
                 values.clear()
                 values.put(MediaStore.Downloads.IS_PENDING, 0)
                 resolver.update(uri, values, null, null)
