@@ -15,11 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.lendlog.app.ui.theme.*
+import kotlin.math.roundToInt
 
 @Composable
 fun EmptyState(
@@ -30,12 +32,14 @@ fun EmptyState(
     onCtaClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val density = LocalDensity.current
+    val bobTargetPx = with(density) { (-14).dp.toPx() }
     val infiniteTransition = rememberInfiniteTransition(label = "iconBob")
     val offsetY by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = -10f,
+        targetValue  = bobTargetPx,
         animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
+            animation  = tween(1400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "iconBob"
@@ -51,7 +55,7 @@ fun EmptyState(
         Box(
             modifier         = Modifier
                 .size(80.dp)
-                .graphicsLayer { translationY = offsetY }
+                .offset { IntOffset(0, offsetY.roundToInt()) }
                 .background(BrandSoft, CircleShape),
             contentAlignment = Alignment.Center
         ) {

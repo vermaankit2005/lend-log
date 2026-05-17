@@ -208,9 +208,9 @@ private fun StatusAndItemLine(loan: Loan, isDueSoon: Boolean) {
     val infiniteTransition = rememberInfiniteTransition(label = "overduePulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue  = if (loan.isOverdue) 1.08f else 1f,
+        targetValue  = if (loan.isOverdue) 1.18f else 1f,
         animationSpec = infiniteRepeatable(
-            animation  = tween(800, easing = FastOutSlowInEasing),
+            animation  = tween(700, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
@@ -222,7 +222,11 @@ private fun StatusAndItemLine(loan: Loan, isDueSoon: Boolean) {
             style    = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
             color    = statusColor,
             maxLines = 1,
-            modifier = if (loan.isOverdue) Modifier.graphicsLayer { scaleX = pulseScale; scaleY = pulseScale } else Modifier
+            modifier = if (loan.isOverdue) Modifier.graphicsLayer {
+                scaleX = pulseScale
+                scaleY = pulseScale
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
+            } else Modifier
         )
         Text(
             text     = " · ${loan.itemName}",
