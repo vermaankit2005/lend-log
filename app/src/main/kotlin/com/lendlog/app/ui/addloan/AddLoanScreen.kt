@@ -41,6 +41,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -183,6 +186,7 @@ fun AddLoanScreen(
                 value = uiState.borrowerName,
                 onValueChange = { viewModel.updateBorrower(it) },
                 placeholder = "Borrower's name",
+                capitalization = KeyboardCapitalization.Words,
                 leadingIcon = { Icon(Icons.Outlined.Person, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     TextButton(
@@ -233,6 +237,7 @@ fun AddLoanScreen(
                 value = uiState.tags,
                 onValueChange = viewModel::updateTags,
                 placeholder = "Tags: book, tools, electronics…",
+                capitalization = KeyboardCapitalization.None,
                 leadingIcon = { Icon(Icons.Outlined.Tag, contentDescription = null, tint = N400, modifier = Modifier.size(20.dp)) }
             )
 
@@ -259,7 +264,8 @@ private fun FormField(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     minLines: Int = 1,
-    maxLines: Int = 1
+    maxLines: Int = 1,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences
 ) {
     OutlinedTextField(
         value = value,
@@ -270,6 +276,7 @@ private fun FormField(
         singleLine = maxLines == 1,
         minLines = minLines,
         maxLines = maxLines,
+        keyboardOptions = KeyboardOptions(capitalization = capitalization),
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier.fillMaxWidth(),
         textStyle = MaterialTheme.typography.bodyMedium,
