@@ -2,6 +2,11 @@ package com.lendlog.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -199,12 +205,28 @@ private fun StatusAndItemLine(loan: Loan, isDueSoon: Boolean) {
         }
     }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "overduePulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue  = if (loan.isOverdue) 1.18f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation  = tween(700, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text     = statusText,
             style    = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
             color    = statusColor,
-            maxLines = 1
+            maxLines = 1,
+            modifier = if (loan.isOverdue) Modifier.graphicsLayer {
+                scaleX = pulseScale
+                scaleY = pulseScale
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
+            } else Modifier
         )
         Text(
             text     = " · ${loan.itemName}",

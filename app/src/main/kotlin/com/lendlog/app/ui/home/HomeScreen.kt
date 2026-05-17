@@ -153,7 +153,6 @@ private fun ByItemFeed(uiState: HomeUiState, onLoanClick: (String) -> Unit) {
         contentPadding      = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // OVERDUE section
         if (overdueLoans.isNotEmpty()) {
             item(key = "header_overdue") {
                 SectionHeader(label = "Overdue", count = overdueLoans.size, dotColor = Danger)
@@ -163,7 +162,6 @@ private fun ByItemFeed(uiState: HomeUiState, onLoanClick: (String) -> Unit) {
             }
         }
 
-        // DUE SOON section
         if (dueSoonLoans.isNotEmpty()) {
             item(key = "header_due_soon") {
                 SectionHeader(label = "Due Soon", count = dueSoonLoans.size, dotColor = Warning)
@@ -173,7 +171,6 @@ private fun ByItemFeed(uiState: HomeUiState, onLoanClick: (String) -> Unit) {
             }
         }
 
-        // ACTIVE section
         if (activeLoans.isNotEmpty()) {
             item(key = "header_active") {
                 SectionHeader(label = "Active", count = activeLoans.size)

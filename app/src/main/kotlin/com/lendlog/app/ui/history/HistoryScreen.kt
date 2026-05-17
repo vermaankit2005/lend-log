@@ -1,21 +1,25 @@
 package com.lendlog.app.ui.history
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lendlog.app.data.db.Loan
 import com.lendlog.app.ui.components.EmptyState
 import com.lendlog.app.ui.components.LendLogTopBar
 import com.lendlog.app.ui.components.LoanCard
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,7 +32,6 @@ fun HistoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Group by "Month YYYY" using returnedDate (fall back to lentDate)
     val monthFmt = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
     val grouped = uiState.loans.groupBy { loan ->
         val ts = loan.returnedDate ?: loan.lentDate
@@ -62,6 +65,7 @@ fun HistoryScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    var globalIndex = 0
                     grouped.forEach { (month, loans) ->
                         item(key = "header_$month") {
                             Text(
@@ -71,13 +75,33 @@ fun HistoryScreen(
                                 modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                             )
                         }
-                        itemsIndexed(loans, key = { _, loan -> loan.id }) { _, loan ->
-                            LoanCard(loan = loan, onClick = { onNavigateToDetail(loan.id) })
+                        itemsIndexed(loans, key = { _, loan -> loan.id }) { localIndex, loan ->
+                            AnimatedHistoryCard(
+                                index = globalIndex + localIndex,
+                                loan = loan,
+                                onLoanClick = onNavigateToDetail
+                            )
                         }
+                        globalIndex += loans.size
                     }
                     item { Spacer(Modifier.height(32.dp)) }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AnimatedHistoryCard(index: Int, loan: Loan, onLoanClick: (String) -> Unit) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(minOf(index * 40L, 240L))
+        visible = true
+    }
+    AnimatedVisibility(
+        visible = visible,
+        enter   = fadeIn() + slideInVertically(initialOffsetY = { it / 4 })
+    ) {
+        LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
     }
 }

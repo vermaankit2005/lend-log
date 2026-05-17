@@ -1,7 +1,15 @@
 package com.lendlog.app.navigation
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -12,10 +20,9 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -59,11 +66,36 @@ private val navItems = listOf(
 
 private val bottomNavRoutes = navItems.map { it.route }.toSet()
 
+// Shared transition specs
+private val pushEnter  = slideInHorizontally(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn()
+private val pushExit   = slideOutHorizontally(spring(stiffness = Spring.StiffnessMediumLow)) { -it / 4 } + fadeOut()
+private val popEnter   = slideInHorizontally(spring(stiffness = Spring.StiffnessMediumLow)) { -it / 4 } + fadeIn()
+private val popExit    = slideOutHorizontally(spring(stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut()
+private val tabEnter   = fadeIn()
+private val tabExit    = fadeOut()
+
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // FAB bounce-in whenever it becomes visible
+    val fabScale = remember { Animatable(0f) }
+    LaunchedEffect(currentRoute == Routes.HOME) {
+        if (currentRoute == Routes.HOME) {
+            fabScale.snapTo(0f)
+            fabScale.animateTo(
+                targetValue    = 1f,
+                animationSpec  = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness    = Spring.StiffnessMedium
+                )
+            )
+        } else {
+            fabScale.snapTo(0f)
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -71,9 +103,10 @@ fun AppNavigation() {
             if (currentRoute == Routes.HOME) {
                 FloatingActionButton(
                     onClick        = { navController.navigate(Routes.ADD_LOAN) },
-                    containerColor = Ink,          // Ink is now Brand (teal)
+                    containerColor = Ink,
                     contentColor   = Color.White,
                     shape          = CircleShape,
+                    modifier       = Modifier.scale(fabScale.value),
                     elevation      = FloatingActionButtonDefaults.elevation(
                         defaultElevation = 4.dp,
                         pressedElevation = 8.dp
@@ -128,7 +161,11 @@ fun AppNavigation() {
     ) { padding ->
         NavHost(
             navController    = navController,
-            startDestination = Routes.HOME
+            startDestination = Routes.HOME,
+            enterTransition  = { tabEnter },
+            exitTransition   = { tabExit },
+            popEnterTransition  = { tabEnter },
+            popExitTransition   = { tabExit }
         ) {
             composable(Routes.HOME) {
                 HomeScreen(
@@ -138,7 +175,13 @@ fun AppNavigation() {
                 )
             }
 
-            composable(Routes.ADD_LOAN) {
+            composable(
+                route            = Routes.ADD_LOAN,
+                enterTransition  = { pushEnter },
+                exitTransition   = { pushExit },
+                popEnterTransition  = { popEnter },
+                popExitTransition   = { popExit }
+            ) {
                 AddLoanScreen(
                     onNavigateBack = { navController.popBackStack() },
                     onLoanSaved    = { navController.popBackStack() }
@@ -147,7 +190,11 @@ fun AppNavigation() {
 
             composable(
                 route     = Routes.LOAN_DETAIL,
-                arguments = listOf(navArgument("loanId") { type = NavType.StringType })
+                arguments = listOf(navArgument("loanId") { type = NavType.StringType }),
+                enterTransition  = { pushEnter },
+                exitTransition   = { pushExit },
+                popEnterTransition  = { popEnter },
+                popExitTransition   = { popExit }
             ) { backStack ->
                 val loanId = backStack.arguments?.getString("loanId") ?: return@composable
                 LoanDetailScreen(
@@ -160,7 +207,11 @@ fun AppNavigation() {
 
             composable(
                 route     = Routes.EDIT_LOAN,
-                arguments = listOf(navArgument("loanId") { type = NavType.StringType })
+                arguments = listOf(navArgument("loanId") { type = NavType.StringType }),
+                enterTransition  = { pushEnter },
+                exitTransition   = { pushExit },
+                popEnterTransition  = { popEnter },
+                popExitTransition   = { popExit }
             ) {
                 AddLoanScreen(
                     onNavigateBack = { navController.popBackStack() },
@@ -168,14 +219,26 @@ fun AppNavigation() {
                 )
             }
 
-            composable(Routes.HISTORY) {
+            composable(
+                route            = Routes.HISTORY,
+                enterTransition  = { tabEnter },
+                exitTransition   = { tabExit },
+                popEnterTransition  = { tabEnter },
+                popExitTransition   = { tabExit }
+            ) {
                 HistoryScreen(
                     onNavigateToDetail = { id -> navController.navigate(Routes.loanDetail(id)) },
                     bottomPadding      = padding
                 )
             }
 
-            composable(Routes.SETTINGS) {
+            composable(
+                route            = Routes.SETTINGS,
+                enterTransition  = { tabEnter },
+                exitTransition   = { tabExit },
+                popEnterTransition  = { tabEnter },
+                popExitTransition   = { tabExit }
+            ) {
                 SettingsScreen(bottomPadding = padding)
             }
         }
