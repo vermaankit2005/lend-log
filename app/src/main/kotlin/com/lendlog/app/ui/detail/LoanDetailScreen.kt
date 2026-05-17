@@ -26,8 +26,18 @@ import com.lendlog.app.ui.components.LoanStatusBadge
 import com.lendlog.app.ui.components.TagChip
 import com.lendlog.app.ui.theme.*
 import com.lendlog.app.util.WhatsAppHelper
+import kotlinx.coroutines.delay
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Angle
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.Spread
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import nl.dionsegijn.konfetti.core.models.Shape
+import nl.dionsegijn.konfetti.core.models.Size
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +54,13 @@ fun LoanDetailScreen(
 
     LaunchedEffect(uiState.deleted) {
         if (uiState.deleted) onNavigateBack()
+    }
+
+    LaunchedEffect(uiState.showConfetti) {
+        if (uiState.showConfetti) {
+            delay(2000L)
+            onNavigateBack()
+        }
     }
 
     if (uiState.showDeleteDialog) {
@@ -84,6 +101,7 @@ fun LoanDetailScreen(
         )
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -257,6 +275,14 @@ fun LoanDetailScreen(
             }
         }
     }
+
+    if (uiState.showConfetti) {
+        KonfettiView(
+            modifier = Modifier.fillMaxSize(),
+            parties = celebrationParties()
+        )
+    }
+    } // end Box
 }
 
 @Composable
@@ -348,3 +374,47 @@ private fun SkeletonBox(height: androidx.compose.ui.unit.Dp, fraction: Float = 1
 
 private fun formatDate(epochMillis: Long): String =
     SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(epochMillis))
+
+private fun celebrationParties(): List<Party> {
+    val colors = listOf(
+        0xFF0E9AA7.toInt(), // primary teal
+        0xFF26C6DA.toInt(), // light teal
+        0xFF66BB6A.toInt(), // green
+        0xFFFFCA28.toInt(), // amber
+        0xFFFF7043.toInt(), // orange
+        0xFFEC407A.toInt(), // pink
+        0xFFFFFFFF.toInt(), // white
+    )
+    return listOf(
+        // Central burst — 120 particles explode in all directions from screen centre
+        Party(
+            speed = 8f,
+            maxSpeed = 40f,
+            damping = 0.9f,
+            angle = Angle.TOP,
+            spread = Spread.ROUND,
+            colors = colors,
+            shapes = listOf(Shape.Circle, Shape.Square, Shape.Rectangle(0.2f)),
+            size = listOf(Size.SMALL, Size.MEDIUM),
+            timeToLive = 2200L,
+            fadeOutEnabled = true,
+            emitter = Emitter(duration = 120, TimeUnit.MILLISECONDS).max(120),
+            position = Position.Relative(0.5, 0.45)
+        ),
+        // Gentle shower from the top — ribbons and dots rain down
+        Party(
+            speed = 0f,
+            maxSpeed = 12f,
+            damping = 0.9f,
+            angle = Angle.BOTTOM,
+            spread = 130,
+            colors = colors,
+            shapes = listOf(Shape.Square, Shape.Rectangle(0.2f)),
+            size = listOf(Size.SMALL),
+            timeToLive = 2500L,
+            fadeOutEnabled = true,
+            emitter = Emitter(duration = 1500, TimeUnit.MILLISECONDS).perSecond(40),
+            position = Position.Relative(0.5, 0.0)
+        )
+    )
+}
