@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+  <!-- Bold "L" logotype — centered in the safe zone (21–87) -->
+  <!-- Vertical stroke: x 26–48, y 22–87  |  Horizontal foot: x 26–82, y 67–87 -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M26,22 L48,22 L48,67 L82,67 L82,87 L26,87 Z"/>
+
+  <!-- Tracking dot — upper-right, represents the item being logged -->
+  <path
+      android:fillColor="#FFFFFF"
+      android:pathData="M64,30 A10,10 0 0,1 84,30 A10,10 0 0,1 64,30 Z"/>
+</vector>

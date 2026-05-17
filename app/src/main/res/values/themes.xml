@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base app theme — used after the splash screen dismisses -->
+    <style name="Theme.LendLog" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!-- Splash screen launch theme — applied to MainActivity so the splash
+         renders instantly before Compose is ready. postSplashScreenTheme
+         hands off back to Theme.LendLog once the app is drawn. -->
+    <style name="Theme.LendLog.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.LendLog</item>
+    </style>
+
+</resources>

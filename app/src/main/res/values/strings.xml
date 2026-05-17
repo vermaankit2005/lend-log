@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LendLog</string>
+
+    <!-- Home -->
+    <string name="home_title">My Loans</string>
+    <string name="by_item">By Item</string>
+    <string name="by_person">By Person</string>
+    <string name="filter_overdue">Overdue</string>
+    <string name="filter_active">Active</string>
+    <string name="empty_home_title">Nothing lent out</string>
+    <string name="empty_home_body">Tap the + button to log your first loan</string>
+
+    <!-- Add Loan -->
+    <string name="add_loan_title">New Loan</string>
+    <string name="item_name_hint">What are you lending?</string>
+    <string name="notes_hint">Notes (optional)</string>
+    <string name="borrower_hint">Who are you lending to?</string>
+    <string name="return_date_hint">Return date</string>
+    <string name="tags_hint">Tags (comma separated)</string>
+    <string name="take_photo">Take a photo</string>
+    <string name="choose_from_gallery">Gallery</string>
+    <string name="photo_nudge">A photo helps you remember the exact item</string>
+    <string name="save_loan">Save Loan</string>
+    <string name="pick_contact">Pick from Contacts</string>
+    <string name="enter_manually">Enter manually</string>
+
+    <!-- Loan Detail -->
+    <string name="loan_detail_title">Loan Details</string>
+    <string name="mark_returned">Mark as Returned</string>
+    <string name="nudge_via_whatsapp">Nudge via WhatsApp</string>
+    <string name="delete_loan">Delete Loan</string>
+    <string name="delete_confirm_title">Delete this loan?</string>
+    <string name="delete_confirm_body">This will permanently remove the loan record. This cannot be undone.</string>
+    <string name="confirm_return_title">Mark as returned?</string>
+    <string name="confirm_return_body">This will move the loan to your history.</string>
+    <string name="lent_on">Lent on</string>
+    <string name="due_on">Due on</string>
+    <string name="returned_on">Returned on</string>
+    <string name="overdue_badge">Overdue</string>
+    <string name="active_badge">Active</string>
+    <string name="returned_badge">Returned</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="empty_history_title">No returned loans yet</string>
+    <string name="empty_history_body">Loans you mark as returned will appear here</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="export_now">Export backup now</string>
+    <string name="restore_backup">Restore from backup</string>
+    <string name="export_success">Backup saved to Downloads</string>
+    <string name="export_failed">Export failed. Please try again.</string>
+    <string name="restore_success">Backup restored successfully</string>
+    <string name="restore_failed">Could not read backup file</string>
+    <string name="last_backup">Last backup: %1$s</string>
+    <string name="never_backed_up">Never backed up</string>
+    <string name="backup_section">Backup</string>
+    <string name="about_section">About</string>
+    <string name="app_version">Version %1$s</string>
+    <string name="unlock_premium">Unlock Unlimited</string>
+
+    <!-- Paywall -->
+    <string name="paywall_title">You\'ve reached the limit</string>
+    <string name="paywall_body">Free accounts can track up to 3 active loans.\nUnlock unlimited loans for a one-time payment.</string>
+    <string name="paywall_cta">Unlock for $2.99</string>
+    <string name="paywall_restore">Restore purchase</string>
+    <string name="paywall_dismiss">Not now</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_reminders">Loan Reminders</string>
+    <string name="notif_channel_reminders_desc">Reminders for upcoming and overdue loans</string>
+    <string name="notif_due_soon_title">%1$s due soon</string>
+    <string name="notif_due_soon_body">%1$s borrowed your %2$s — due in 3 days</string>
+    <string name="notif_overdue_title">%1$s is overdue</string>
+    <string name="notif_overdue_body">%1$s still has your %2$s</string>
+
+    <!-- WhatsApp -->
+    <string name="whatsapp_message">Hey! Just a reminder — you still have my %1$s. Would love to get it back soon 😊</string>
+    <string name="whatsapp_not_installed">WhatsApp is not installed</string>
+    <string name="no_phone_for_nudge">No phone number saved for this borrower</string>
+
+    <!-- Errors / Generic -->
+    <string name="error_generic">Something went wrong</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
+    <string name="close">Close</string>
+    <string name="ok">OK</string>
+    <string name="free_tier_limit">Free tier: 3 active loans. Return one to add more, or unlock unlimited.</string>
+</resources>
