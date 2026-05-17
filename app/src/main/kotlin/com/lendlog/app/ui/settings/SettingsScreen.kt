@@ -1,5 +1,7 @@
 package com.lendlog.app.ui.settings
 
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -19,12 +21,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.lendlog.app.BuildConfig
 import com.lendlog.app.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen(
     bottomPadding: PaddingValues = PaddingValues(),
@@ -33,6 +38,25 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var pendingExport by remember { mutableStateOf(false) }
+    val writeStoragePermission = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+    LaunchedEffect(writeStoragePermission.status, pendingExport) {
+        if (pendingExport && writeStoragePermission.status.isGranted) {
+            pendingExport = false
+            viewModel.exportNow()
+        }
+    }
+
+    val handleExport: () -> Unit = {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && !writeStoragePermission.status.isGranted) {
+            pendingExport = true
+            writeStoragePermission.launchPermissionRequest()
+        } else {
+            viewModel.exportNow()
+        }
+    }
 
     LaunchedEffect(uiState.exportResult) {
         uiState.exportResult?.let { success ->
@@ -145,7 +169,7 @@ fun SettingsScreen(
                     iconTint = Ink,
                     title = "Export backup now",
                     subtitle = "Save to Downloads folder",
-                    onClick = viewModel::exportNow,
+                    onClick = handleExport,
                     loading = uiState.isExporting
                 )
 
