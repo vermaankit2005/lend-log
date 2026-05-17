@@ -89,7 +89,7 @@ fun AppNavigation() {
                         thickness = 1.dp
                     )
                     NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
+                        containerColor = MaterialTheme.colorScheme.background,
                         tonalElevation = 0.dp
                     ) {
                         navItems.forEach { item ->
