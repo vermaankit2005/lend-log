@@ -3,7 +3,6 @@ package com.lendlog.app.ui.home
 import android.Manifest
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
@@ -11,15 +10,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -76,16 +72,8 @@ fun HomeScreen(
                 }
             } else {
                 when (uiState.feedView) {
-                    FeedView.BY_STATUS -> ByItemFeed(
-                        uiState        = uiState,
-                        onLoanClick    = onNavigateToDetail,
-                        onMarkReturned = viewModel::markReturned
-                    )
-                    FeedView.BY_PERSON -> ByPersonFeed(
-                        grouped        = uiState.groupedByPerson,
-                        onLoanClick    = onNavigateToDetail,
-                        onMarkReturned = viewModel::markReturned
-                    )
+                    FeedView.BY_STATUS -> ByItemFeed(uiState = uiState, onLoanClick = onNavigateToDetail)
+                    FeedView.BY_PERSON -> ByPersonFeed(grouped = uiState.groupedByPerson, onLoanClick = onNavigateToDetail)
                 }
             }
         }
@@ -156,11 +144,7 @@ private fun SectionHeader(label: String, count: Int, dotColor: androidx.compose.
 }
 
 @Composable
-private fun ByItemFeed(
-    uiState: HomeUiState,
-    onLoanClick: (String) -> Unit,
-    onMarkReturned: (String) -> Unit
-) {
+private fun ByItemFeed(uiState: HomeUiState, onLoanClick: (String) -> Unit) {
     val overdueLoans = uiState.overdueLoans
     val dueSoonLoans = uiState.dueSoonLoans
     val activeLoans  = uiState.activeLoans
@@ -174,7 +158,7 @@ private fun ByItemFeed(
                 SectionHeader(label = "Overdue", count = overdueLoans.size, dotColor = Danger)
             }
             itemsIndexed(overdueLoans, key = { _, loan -> "overdue_${loan.id}" }) { index, loan ->
-                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick, onMarkReturned = onMarkReturned)
+                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick)
             }
         }
 
@@ -183,7 +167,7 @@ private fun ByItemFeed(
                 SectionHeader(label = "Due Soon", count = dueSoonLoans.size, dotColor = Warning)
             }
             itemsIndexed(dueSoonLoans, key = { _, loan -> "soon_${loan.id}" }) { index, loan ->
-                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick, onMarkReturned = onMarkReturned)
+                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick)
             }
         }
 
@@ -192,7 +176,7 @@ private fun ByItemFeed(
                 SectionHeader(label = "Active", count = activeLoans.size)
             }
             itemsIndexed(activeLoans, key = { _, loan -> "active_${loan.id}" }) { index, loan ->
-                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick, onMarkReturned = onMarkReturned)
+                AnimatedLoanCard(index = index, loan = loan, onLoanClick = onLoanClick)
             }
         }
 
@@ -200,14 +184,8 @@ private fun ByItemFeed(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AnimatedLoanCard(
-    index: Int,
-    loan: Loan,
-    onLoanClick: (String) -> Unit,
-    onMarkReturned: (String) -> Unit
-) {
+private fun AnimatedLoanCard(index: Int, loan: Loan, onLoanClick: (String) -> Unit) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(minOf(index * 40L, 240L))
@@ -217,76 +195,12 @@ private fun AnimatedLoanCard(
         visible = visible,
         enter   = fadeIn() + slideInVertically(initialOffsetY = { it / 4 })
     ) {
-        SwipeableReturnCard(loan = loan, onLoanClick = onLoanClick, onMarkReturned = onMarkReturned)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SwipeableReturnCard(
-    loan: Loan,
-    onLoanClick: (String) -> Unit,
-    onMarkReturned: (String) -> Unit
-) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.StartToEnd) {
-                onMarkReturned(loan.id)
-                true
-            } else false
-        }
-    )
-
-    val bgColor by animateColorAsState(
-        targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd)
-            SuccessSoft else Color.Transparent,
-        label = "swipeBg"
-    )
-
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromEndToStart = false,
-        backgroundContent = {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(bgColor)
-                    .padding(start = 20.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
-                    Row(
-                        verticalAlignment     = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            Icons.Outlined.CheckCircle,
-                            contentDescription = null,
-                            tint     = Success,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            "Returned",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Success
-                        )
-                    }
-                }
-            }
-        }
-    ) {
         LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ByPersonFeed(
-    grouped: Map<String, List<Loan>>,
-    onLoanClick: (String) -> Unit,
-    onMarkReturned: (String) -> Unit
-) {
+private fun ByPersonFeed(grouped: Map<String, List<Loan>>, onLoanClick: (String) -> Unit) {
     LazyColumn(
         contentPadding      = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -296,7 +210,7 @@ private fun ByPersonFeed(
                 PersonGroupHeader(person = person, loans = loans)
             }
             itemsIndexed(loans, key = { _, loan -> loan.id }) { _, loan ->
-                SwipeableReturnCard(loan = loan, onLoanClick = onLoanClick, onMarkReturned = onMarkReturned)
+                LoanCard(loan = loan, onClick = { onLoanClick(loan.id) })
             }
         }
         item { Spacer(Modifier.height(80.dp)) }

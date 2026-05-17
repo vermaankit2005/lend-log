@@ -4,10 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.data.repository.LoanRepository
-import com.lendlog.app.worker.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class FeedView { BY_STATUS, BY_PERSON }
@@ -52,8 +50,7 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: LoanRepository,
-    private val notificationScheduler: NotificationScheduler
+    private val repository: LoanRepository
 ) : ViewModel() {
 
     private val _feedView = MutableStateFlow(FeedView.BY_STATUS)
@@ -81,11 +78,4 @@ class HomeViewModel @Inject constructor(
 
     fun setFeedView(view: FeedView) { _feedView.value = view }
     fun setFilter(filter: FilterType) { _filter.value = filter }
-
-    fun markReturned(loanId: String) {
-        viewModelScope.launch {
-            notificationScheduler.cancelForLoan(loanId)
-            repository.markReturned(loanId)
-        }
-    }
 }
