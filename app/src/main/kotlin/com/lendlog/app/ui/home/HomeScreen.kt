@@ -42,6 +42,7 @@ fun HomeScreen(
     RequestNotificationPermission()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
                 title = {

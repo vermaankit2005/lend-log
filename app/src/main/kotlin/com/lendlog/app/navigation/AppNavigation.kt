@@ -1,6 +1,7 @@
 package com.lendlog.app.navigation
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -66,6 +67,7 @@ fun AppNavigation() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         floatingActionButton = {
             if (currentRoute == Routes.HOME) {
                 FloatingActionButton(
