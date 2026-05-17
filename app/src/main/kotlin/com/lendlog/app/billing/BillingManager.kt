@@ -9,6 +9,8 @@ class BillingManager(private val context: Context) {
 
     private var billingClient: BillingClient? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var purchaseSuccessCallback: (() -> Unit)? = null
+    private var purchaseFailureCallback: (() -> Unit)? = null
 
     companion object {
         const val PRODUCT_ID = "lendlog_unlimited"
@@ -19,6 +21,11 @@ class BillingManager(private val context: Context) {
             .setListener { billingResult, purchases ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                     scope.launch { handlePurchases(purchases) }
+                } else if (billingResult.responseCode != BillingClient.BillingResponseCode.USER_CANCELED) {
+                    val cb = purchaseFailureCallback
+                    purchaseSuccessCallback = null
+                    purchaseFailureCallback = null
+                    scope.launch { withContext(Dispatchers.Main) { cb?.invoke() } }
                 }
             }
             .enablePendingPurchases()
@@ -37,6 +44,8 @@ class BillingManager(private val context: Context) {
 
     fun launchBillingFlow(onSuccess: () -> Unit, onFailure: () -> Unit) {
         val client = billingClient ?: run { onFailure(); return }
+        purchaseSuccessCallback = onSuccess
+        purchaseFailureCallback = onFailure
 
         scope.launch {
             val params = QueryProductDetailsParams.newBuilder()
@@ -52,6 +61,8 @@ class BillingManager(private val context: Context) {
             val result = client.queryProductDetails(params)
             val productDetails = result.productDetailsList?.firstOrNull()
             if (productDetails == null) {
+                purchaseSuccessCallback = null
+                purchaseFailureCallback = null
                 withContext(Dispatchers.Main) { onFailure() }
                 return@launch
             }
@@ -68,12 +79,15 @@ class BillingManager(private val context: Context) {
                 val activity = context as? Activity
                 if (activity != null) {
                     val billingResult = client.launchBillingFlow(activity, flowParams)
-                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        onSuccess()
-                    } else {
+                    if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                        purchaseSuccessCallback = null
+                        purchaseFailureCallback = null
                         onFailure()
                     }
+                    // Success delivered via PurchasesUpdatedListener
                 } else {
+                    purchaseSuccessCallback = null
+                    purchaseFailureCallback = null
                     onFailure()
                 }
             }
@@ -101,8 +115,10 @@ class BillingManager(private val context: Context) {
     }
 
     private suspend fun handlePurchases(purchases: List<Purchase>) {
+        var anyPurchased = false
         purchases.forEach { purchase ->
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                anyPurchased = true
                 if (!purchase.isAcknowledged) {
                     val ackParams = AcknowledgePurchaseParams.newBuilder()
                         .setPurchaseToken(purchase.purchaseToken)
@@ -110,6 +126,13 @@ class BillingManager(private val context: Context) {
                     billingClient?.acknowledgePurchase(ackParams)
                 }
             }
+        }
+        val successCb = purchaseSuccessCallback
+        val failureCb = purchaseFailureCallback
+        purchaseSuccessCallback = null
+        purchaseFailureCallback = null
+        withContext(Dispatchers.Main) {
+            if (anyPurchased) successCb?.invoke() else failureCb?.invoke()
         }
     }
 }

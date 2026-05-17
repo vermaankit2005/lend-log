@@ -1,10 +1,14 @@
 package com.lendlog.app.worker
 
+import android.Manifest
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -28,6 +32,12 @@ class LoanNotificationWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return Result.success()
+        }
+
         val loanId = inputData.getString(KEY_LOAN_ID) ?: return Result.failure()
         val itemName = inputData.getString(KEY_ITEM_NAME) ?: return Result.failure()
         val borrowerName = inputData.getString(KEY_BORROWER_NAME) ?: return Result.failure()
