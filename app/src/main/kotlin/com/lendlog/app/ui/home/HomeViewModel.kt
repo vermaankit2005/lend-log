@@ -8,12 +8,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-enum class FeedView { BY_ITEM, BY_PERSON }
+enum class FeedView { BY_STATUS, BY_PERSON }
 enum class FilterType { ALL, OVERDUE }
 
 data class HomeUiState(
     val loans: List<Loan> = emptyList(),
-    val feedView: FeedView = FeedView.BY_ITEM,
+    val feedView: FeedView = FeedView.BY_STATUS,
     val filter: FilterType = FilterType.ALL,
     val activeLoanCount: Int = 0,
     val isUnlocked: Boolean = false
@@ -53,7 +53,7 @@ class HomeViewModel @Inject constructor(
     private val repository: LoanRepository
 ) : ViewModel() {
 
-    private val _feedView = MutableStateFlow(FeedView.BY_ITEM)
+    private val _feedView = MutableStateFlow(FeedView.BY_STATUS)
     private val _filter = MutableStateFlow(FilterType.ALL)
 
     val uiState: StateFlow<HomeUiState> = combine(
