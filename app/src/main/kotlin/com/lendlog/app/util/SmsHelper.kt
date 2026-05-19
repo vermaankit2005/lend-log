@@ -1,6 +1,6 @@
 package com.lendlog.app.util
 
-import android.app.SmsManager
+import android.telephony.SmsManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent

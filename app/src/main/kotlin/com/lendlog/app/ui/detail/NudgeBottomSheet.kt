@@ -5,9 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Message
-import androidx.compose.material.icons.outlined.WhatsApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -71,7 +71,7 @@ fun NudgeBottomSheet(
 
             if (isWhatsAppInstalled) {
                 NudgeOption(
-                    icon = Icons.Outlined.WhatsApp,
+                    icon = Icons.Outlined.Chat,
                     title = "Send via WhatsApp",
                     subtitle = "Opens WhatsApp with the message ready to send",
                     onClick = { onWhatsAppSelected(); onDismiss() }
