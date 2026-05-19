@@ -19,6 +19,8 @@ data class SettingsUiState(
     val exportResult: Boolean? = null,
     val isRestoring: Boolean = false,
     val restoreResult: Boolean? = null,
+    val autoSmsEnabled: Boolean = false,
+    val showAutoSmsConfirm: Boolean = false,
 )
 
 @HiltViewModel
@@ -36,13 +38,15 @@ class SettingsViewModel @Inject constructor(
                 repository.isUnlocked,
                 repository.notificationsEnabled,
                 repository.reminderDays,
-                repository.lastBackupTimestamp
-            ) { unlocked, notif, days, ts ->
+                repository.lastBackupTimestamp,
+                repository.autoSmsEnabled
+            ) { unlocked, notif, days, ts, autoSms ->
                 _uiState.value.copy(
                     isUnlocked           = unlocked,
                     notificationsEnabled = notif,
                     reminderDays         = days,
-                    lastBackupTimestamp  = ts
+                    lastBackupTimestamp  = ts,
+                    autoSmsEnabled       = autoSms
                 )
             }.collect { state -> _uiState.value = state }
         }
@@ -99,4 +103,24 @@ class SettingsViewModel @Inject constructor(
 
     fun clearExportResult() = _uiState.update { it.copy(exportResult = null) }
     fun clearRestoreResult() = _uiState.update { it.copy(restoreResult = null) }
+
+    fun onAutoSmsToggled(enabling: Boolean) {
+        if (enabling) {
+            _uiState.update { it.copy(showAutoSmsConfirm = true) }
+        } else {
+            viewModelScope.launch { repository.setAutoSmsEnabled(false) }
+        }
+    }
+
+    fun confirmAutoSms() {
+        _uiState.update { it.copy(showAutoSmsConfirm = false) }
+    }
+
+    fun dismissAutoSmsConfirm() {
+        _uiState.update { it.copy(showAutoSmsConfirm = false) }
+    }
+
+    fun setAutoSmsEnabled(enabled: Boolean) {
+        viewModelScope.launch { repository.setAutoSmsEnabled(enabled) }
+    }
 }
