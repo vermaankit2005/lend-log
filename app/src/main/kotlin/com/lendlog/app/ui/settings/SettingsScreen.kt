@@ -30,6 +30,8 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.lendlog.app.BuildConfig
 import com.lendlog.app.ui.components.LendLogTopBar
 import com.lendlog.app.ui.paywall.PaywallSheet
+import com.lendlog.app.ui.theme.*
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -43,8 +45,17 @@ fun SettingsScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val scope = rememberCoroutineScope()
     var pendingExport by remember { mutableStateOf(false) }
     val writeStoragePermission = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+    val sendSmsPermission = rememberPermissionState(Manifest.permission.SEND_SMS) { granted ->
+        if (granted) {
+            viewModel.setAutoSmsEnabled(true)
+        } else {
+            scope.launch { snackbarHostState.showSnackbar("SMS permission is required for Auto SMS") }
+        }
+    }
 
     LaunchedEffect(writeStoragePermission.status, pendingExport) {
         if (pendingExport && writeStoragePermission.status.isGranted) {
@@ -88,6 +99,20 @@ fun SettingsScreen(
         PaywallSheet(
             onDismiss = viewModel::dismissPaywall,
             onPurchased = viewModel::onPurchased
+        )
+    }
+
+    if (uiState.showAutoSmsConfirm) {
+        AutoSmsConfirmSheet(
+            onDismiss = viewModel::dismissAutoSmsConfirm,
+            onConfirm = {
+                viewModel.confirmAutoSms()
+                if (sendSmsPermission.status.isGranted) {
+                    viewModel.setAutoSmsEnabled(true)
+                } else {
+                    sendSmsPermission.launchPermissionRequest()
+                }
+            }
         )
     }
 
@@ -245,6 +270,85 @@ fun SettingsScreen(
                             }
                         }
                     }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // ── NUDGES ────────────────────────────────────────────────────
+            SectionHeader("NUDGES")
+
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            "About Auto SMS",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    Text(
+                        "When enabled, LendLog will automatically send an SMS to the borrower " +
+                        "3 days before the due date and again when a loan goes overdue. " +
+                        "The message is sent from your number — the borrower will see it as a " +
+                        "normal text from you.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            SettingsGroup {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Sms,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Auto SMS reminders",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            "Automatically text borrowers when loans are due",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = uiState.autoSmsEnabled,
+                        onCheckedChange = { viewModel.onAutoSmsToggled(it) }
+                    )
                 }
             }
 
@@ -466,3 +570,116 @@ private fun SettingsRow(
 
 private fun formatDateTime(epochMillis: Long): String =
     SimpleDateFormat("MMM d, yyyy · HH:mm", Locale.getDefault()).format(Date(epochMillis))
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AutoSmsConfirmSheet(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = N0,
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                "Enable Auto SMS Reminders?",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = N800
+            )
+
+            Text(
+                "When enabled, LendLog will send an SMS on your behalf to each borrower:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = N600
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                BulletPoint("3 days before the return date as a heads-up")
+                BulletPoint("On the due date if the loan is still active")
+            }
+
+            Surface(
+                color = BrandSoft,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text("Sample message", style = MaterialTheme.typography.labelSmall, color = BrandDeep)
+                    Text(
+                        "\"Hey! Just a reminder — you still have my [item]. Would love to get it back soon 😊\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = BrandDeep
+                    )
+                }
+            }
+
+            Surface(
+                color = WarningSoft,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        Icons.Outlined.Info,
+                        contentDescription = null,
+                        tint = Warning,
+                        modifier = Modifier.size(16.dp).padding(top = 1.dp)
+                    )
+                    Text(
+                        "The borrower sees your phone number as the sender. SMS permission will be requested.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Warning
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Not now", style = MaterialTheme.typography.labelLarge)
+                }
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Brand, contentColor = N0)
+                ) {
+                    Text("Enable & Allow", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BulletPoint(text: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text("•", style = MaterialTheme.typography.bodyMedium, color = Brand)
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = N700)
+    }
+}

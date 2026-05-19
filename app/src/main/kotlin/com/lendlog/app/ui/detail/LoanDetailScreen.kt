@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,8 +26,10 @@ import com.lendlog.app.data.db.Loan
 import com.lendlog.app.ui.components.LoanStatusBadge
 import com.lendlog.app.ui.components.TagChip
 import com.lendlog.app.ui.theme.*
+import com.lendlog.app.util.SmsHelper
 import com.lendlog.app.util.WhatsAppHelper
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Angle
 import nl.dionsegijn.konfetti.core.Party
@@ -50,7 +53,10 @@ fun LoanDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var showMenu by remember { mutableStateOf(false) }
+    var showNudgeSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.deleted) {
         if (uiState.deleted) onNavigateBack()
@@ -101,8 +107,33 @@ fun LoanDetailScreen(
         )
     }
 
+    if (showNudgeSheet) {
+        val loan = uiState.loan
+        if (loan != null && loan.borrowerPhone != null) {
+            NudgeBottomSheet(
+                borrowerName = loan.borrowerName,
+                borrowerPhone = loan.borrowerPhone,
+                itemName = loan.itemName,
+                onDismiss = { showNudgeSheet = false },
+                onWhatsAppSelected = {
+                    WhatsAppHelper.sendNudge(context, loan.borrowerPhone, loan.itemName)
+                },
+                onSmsSelected = {
+                    SmsHelper.openSmsApp(context, loan.borrowerPhone, loan.itemName)
+                    if (!uiState.autoSmsEnabled && !uiState.smsNudgeTipShown) {
+                        viewModel.markSmsNudgeTipShown()
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Want this automated? Enable Auto SMS in Settings.")
+                        }
+                    }
+                }
+            )
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick        = onNavigateToAdd,
@@ -244,9 +275,9 @@ fun LoanDetailScreen(
 
                 // Actions
                 if (!loan.isReturned) {
-                    loan.borrowerPhone?.let { phone ->
+                    loan.borrowerPhone?.let {
                         OutlinedButton(
-                            onClick = { WhatsAppHelper.sendNudge(context, phone, loan.itemName) },
+                            onClick = { showNudgeSheet = true },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = Ink),

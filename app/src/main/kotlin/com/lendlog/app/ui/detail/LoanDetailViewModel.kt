@@ -11,12 +11,16 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+
 data class DetailUiState(
     val loan: Loan? = null,
     val showDeleteDialog: Boolean = false,
     val showReturnDialog: Boolean = false,
     val deleted: Boolean = false,
-    val showConfetti: Boolean = false
+    val showConfetti: Boolean = false,
+    val autoSmsEnabled: Boolean = false,
+    val smsNudgeTipShown: Boolean = false
 )
 
 @HiltViewModel
@@ -33,9 +37,17 @@ class LoanDetailViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repository.observeLoan(loanId).collect { loan ->
-                _uiState.update { it.copy(loan = loan) }
-            }
+            combine(
+                repository.observeLoan(loanId),
+                repository.autoSmsEnabled,
+                repository.smsNudgeTipShown
+            ) { loan, autoSms, tipShown ->
+                _uiState.value.copy(
+                    loan = loan,
+                    autoSmsEnabled = autoSms,
+                    smsNudgeTipShown = tipShown
+                )
+            }.collect { state -> _uiState.value = state }
         }
     }
 
@@ -50,6 +62,10 @@ class LoanDetailViewModel @Inject constructor(
             repository.deleteLoan(loanId)
             _uiState.update { it.copy(deleted = true, showDeleteDialog = false) }
         }
+    }
+
+    fun markSmsNudgeTipShown() {
+        viewModelScope.launch { repository.setSmsNudgeTipShown(true) }
     }
 
     fun markReturned() {

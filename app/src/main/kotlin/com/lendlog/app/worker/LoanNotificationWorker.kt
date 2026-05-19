@@ -15,44 +15,51 @@ import androidx.work.WorkerParameters
 import com.lendlog.app.LendLogApp
 import com.lendlog.app.MainActivity
 import com.lendlog.app.R
+import com.lendlog.app.data.datastore.AppPreferences
+import com.lendlog.app.util.SmsHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 
 @HiltWorker
 class LoanNotificationWorker @AssistedInject constructor(
     @Assisted private val context: Context,
-    @Assisted workerParams: WorkerParameters
+    @Assisted workerParams: WorkerParameters,
+    private val appPreferences: AppPreferences
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
-        const val KEY_LOAN_ID = "loan_id"
-        const val KEY_ITEM_NAME = "item_name"
+        const val KEY_LOAN_ID       = "loan_id"
+        const val KEY_ITEM_NAME     = "item_name"
         const val KEY_BORROWER_NAME = "borrower_name"
-        const val KEY_IS_OVERDUE = "is_overdue"
+        const val KEY_IS_OVERDUE    = "is_overdue"
+        const val KEY_BORROWER_PHONE = "borrower_phone"
     }
 
     override suspend fun doWork(): Result {
+        val loanId       = inputData.getString(KEY_LOAN_ID)       ?: return Result.failure()
+        val itemName     = inputData.getString(KEY_ITEM_NAME)     ?: return Result.failure()
+        val borrowerName = inputData.getString(KEY_BORROWER_NAME) ?: return Result.failure()
+        val isOverdue    = inputData.getBoolean(KEY_IS_OVERDUE, false)
+        val borrowerPhone = inputData.getString(KEY_BORROWER_PHONE)
+
+        postNotification(loanId, itemName, borrowerName, isOverdue)
+
+        if (!borrowerPhone.isNullOrBlank() && appPreferences.autoSmsEnabled.first()) {
+            SmsHelper.sendAutoSms(context, borrowerPhone, itemName)
+        }
+
+        return Result.success()
+    }
+
+    private fun postNotification(loanId: String, itemName: String, borrowerName: String, isOverdue: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return Result.success()
-        }
+        ) return
 
-        val loanId = inputData.getString(KEY_LOAN_ID) ?: return Result.failure()
-        val itemName = inputData.getString(KEY_ITEM_NAME) ?: return Result.failure()
-        val borrowerName = inputData.getString(KEY_BORROWER_NAME) ?: return Result.failure()
-        val isOverdue = inputData.getBoolean(KEY_IS_OVERDUE, false)
-
-        val title: String
-        val body: String
-
-        if (isOverdue) {
-            title = "$itemName is overdue"
-            body = "$borrowerName still has your $itemName"
-        } else {
-            title = "$itemName due soon"
-            body = "$borrowerName borrowed your $itemName — due in 3 days"
-        }
+        val title = if (isOverdue) "$itemName is overdue" else "$itemName due soon"
+        val body  = if (isOverdue) "$borrowerName still has your $itemName"
+                    else "$borrowerName borrowed your $itemName — due in 3 days"
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -71,9 +78,6 @@ class LoanNotificationWorker @AssistedInject constructor(
             .setAutoCancel(true)
             .build()
 
-        val manager = context.getSystemService(NotificationManager::class.java)
-        manager.notify(loanId.hashCode(), notification)
-
-        return Result.success()
+        context.getSystemService(NotificationManager::class.java).notify(loanId.hashCode(), notification)
     }
 }
