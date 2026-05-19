@@ -1,6 +1,8 @@
 package com.lendlog.app.ui.theme
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -9,6 +11,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+
+private fun Context.findActivity(): Activity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
+}
 
 private val LightColorScheme = lightColorScheme(
     primary              = Brand,
@@ -42,9 +53,11 @@ fun LendLogTheme(content: @Composable () -> Unit) {
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = Color.Transparent.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+            val activity = view.context.findActivity()
+            if (activity != null) {
+                activity.window.statusBarColor = Color.Transparent.toArgb()
+                WindowCompat.getInsetsController(activity.window, view).isAppearanceLightStatusBars = true
+            }
         }
     }
     MaterialTheme(

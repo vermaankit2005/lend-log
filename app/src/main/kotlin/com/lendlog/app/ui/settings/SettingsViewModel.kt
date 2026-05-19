@@ -121,6 +121,13 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setAutoSmsEnabled(enabled: Boolean) {
-        viewModelScope.launch { repository.setAutoSmsEnabled(enabled) }
+        viewModelScope.launch {
+            repository.setAutoSmsEnabled(enabled)
+            if (enabled) {
+                val loans = repository.activeLoans.first()
+                val days = repository.reminderDays.first()
+                loans.forEach { notificationScheduler.scheduleForLoan(it, days) }
+            }
+        }
     }
 }
