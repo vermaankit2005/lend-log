@@ -42,7 +42,7 @@ fun HomeScreen(
     RequestNotificationPermission()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0),
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
         topBar = { LendLogTopBar(showLogo = true) },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->

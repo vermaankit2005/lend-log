@@ -46,7 +46,7 @@ private val avatarPalette = listOf(
 )
 
 private fun avatarColor(name: String): Color =
-    avatarPalette[Math.abs(name.trim().lowercase().hashCode()) % avatarPalette.size]
+    avatarPalette[Math.floorMod(name.trim().lowercase().hashCode(), avatarPalette.size)]
 
 private fun initials(name: String): String =
     name.trim().split(" ").filter { it.isNotEmpty() }

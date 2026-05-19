@@ -39,7 +39,7 @@ fun HistoryScreen(
     }
 
     Scaffold(
-        contentWindowInsets = WindowInsets(0),
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
         topBar = { LendLogTopBar(title = "History") },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
@@ -75,9 +75,10 @@ fun HistoryScreen(
                                 modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
                             )
                         }
+                        val sectionStart = globalIndex
                         itemsIndexed(loans, key = { _, loan -> loan.id }) { localIndex, loan ->
                             AnimatedHistoryCard(
-                                index = globalIndex + localIndex,
+                                index = sectionStart + localIndex,
                                 loan = loan,
                                 onLoanClick = onNavigateToDetail
                             )
