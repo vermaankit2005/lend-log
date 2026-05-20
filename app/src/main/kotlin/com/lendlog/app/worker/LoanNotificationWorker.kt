@@ -65,6 +65,7 @@ class LoanNotificationWorker @AssistedInject constructor(
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(MainActivity.EXTRA_LOAN_ID, loanId)
         }
         val pendingIntent = PendingIntent.getActivity(
             context, loanId.hashCode(), intent,
