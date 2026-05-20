@@ -75,10 +75,16 @@ private val tabEnter   = fadeIn()
 private val tabExit    = fadeOut()
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(deepLinkLoanId: String? = null) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(deepLinkLoanId) {
+        if (deepLinkLoanId != null) {
+            navController.navigate(Routes.loanDetail(deepLinkLoanId))
+        }
+    }
 
     // FAB bounce-in whenever it becomes visible
     val fabScale = remember { Animatable(0f) }
