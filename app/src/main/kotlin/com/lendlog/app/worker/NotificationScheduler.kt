@@ -29,7 +29,8 @@ class NotificationScheduler @Inject constructor(
                 borrowerName = loan.borrowerName,
                 borrowerPhone = loan.borrowerPhone,
                 isOverdue = false,
-                delayMillis = delay
+                delayMillis = delay,
+                reminderDays = reminderDays
             )
             workManager.enqueueUniqueWork(
                 "notif_due_soon_${loan.id}",
@@ -69,14 +70,16 @@ class NotificationScheduler @Inject constructor(
         borrowerName: String,
         borrowerPhone: String?,
         isOverdue: Boolean,
-        delayMillis: Long
+        delayMillis: Long,
+        reminderDays: Int = 3
     ): OneTimeWorkRequest {
         val data = workDataOf(
             LoanNotificationWorker.KEY_LOAN_ID        to loanId,
             LoanNotificationWorker.KEY_ITEM_NAME      to itemName,
             LoanNotificationWorker.KEY_BORROWER_NAME  to borrowerName,
             LoanNotificationWorker.KEY_BORROWER_PHONE to borrowerPhone,
-            LoanNotificationWorker.KEY_IS_OVERDUE     to isOverdue
+            LoanNotificationWorker.KEY_IS_OVERDUE     to isOverdue,
+            LoanNotificationWorker.KEY_REMINDER_DAYS  to reminderDays
         )
         return OneTimeWorkRequestBuilder<LoanNotificationWorker>()
             .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)

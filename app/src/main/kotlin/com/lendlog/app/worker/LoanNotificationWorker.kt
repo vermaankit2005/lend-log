@@ -29,21 +29,23 @@ class LoanNotificationWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
-        const val KEY_LOAN_ID       = "loan_id"
-        const val KEY_ITEM_NAME     = "item_name"
-        const val KEY_BORROWER_NAME = "borrower_name"
-        const val KEY_IS_OVERDUE    = "is_overdue"
+        const val KEY_LOAN_ID        = "loan_id"
+        const val KEY_ITEM_NAME      = "item_name"
+        const val KEY_BORROWER_NAME  = "borrower_name"
+        const val KEY_IS_OVERDUE     = "is_overdue"
         const val KEY_BORROWER_PHONE = "borrower_phone"
+        const val KEY_REMINDER_DAYS  = "reminder_days"
     }
 
     override suspend fun doWork(): Result {
-        val loanId       = inputData.getString(KEY_LOAN_ID)       ?: return Result.failure()
-        val itemName     = inputData.getString(KEY_ITEM_NAME)     ?: return Result.failure()
-        val borrowerName = inputData.getString(KEY_BORROWER_NAME) ?: return Result.failure()
-        val isOverdue    = inputData.getBoolean(KEY_IS_OVERDUE, false)
+        val loanId        = inputData.getString(KEY_LOAN_ID)       ?: return Result.failure()
+        val itemName      = inputData.getString(KEY_ITEM_NAME)     ?: return Result.failure()
+        val borrowerName  = inputData.getString(KEY_BORROWER_NAME) ?: return Result.failure()
+        val isOverdue     = inputData.getBoolean(KEY_IS_OVERDUE, false)
         val borrowerPhone = inputData.getString(KEY_BORROWER_PHONE)
+        val reminderDays  = inputData.getInt(KEY_REMINDER_DAYS, 3)
 
-        postNotification(loanId, itemName, borrowerName, isOverdue)
+        postNotification(loanId, itemName, borrowerName, isOverdue, reminderDays)
 
         if (!borrowerPhone.isNullOrBlank() && appPreferences.autoSmsEnabled.first()) {
             SmsHelper.sendAutoSms(context, borrowerPhone, itemName)
@@ -52,14 +54,14 @@ class LoanNotificationWorker @AssistedInject constructor(
         return Result.success()
     }
 
-    private fun postNotification(loanId: String, itemName: String, borrowerName: String, isOverdue: Boolean) {
+    private fun postNotification(loanId: String, itemName: String, borrowerName: String, isOverdue: Boolean, reminderDays: Int = 3) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) return
 
         val title = if (isOverdue) "$itemName is overdue" else "$itemName due soon"
         val body  = if (isOverdue) "$borrowerName still has your $itemName"
-                    else "$borrowerName borrowed your $itemName — due in 3 days"
+                    else "$borrowerName borrowed your $itemName — due in $reminderDays ${if (reminderDays == 1) "day" else "days"}"
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
