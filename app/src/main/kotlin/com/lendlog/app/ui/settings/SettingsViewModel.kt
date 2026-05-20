@@ -2,6 +2,7 @@ package com.lendlog.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lendlog.app.data.db.Loan
 import com.lendlog.app.data.repository.LoanRepository
 import com.lendlog.app.worker.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +22,7 @@ data class SettingsUiState(
     val restoreResult: Boolean? = null,
     val autoSmsEnabled: Boolean = false,
     val showAutoSmsConfirm: Boolean = false,
+    val testNotificationSent: Boolean = false,
 )
 
 @HiltViewModel
@@ -103,6 +105,24 @@ class SettingsViewModel @Inject constructor(
 
     fun clearExportResult() = _uiState.update { it.copy(exportResult = null) }
     fun clearRestoreResult() = _uiState.update { it.copy(restoreResult = null) }
+
+    fun sendTestNotification() {
+        viewModelScope.launch {
+            val loan = repository.activeLoans.first().firstOrNull() ?: Loan(
+                id           = "test-notif",
+                itemName     = "Camera",
+                borrowerName = "Alice",
+                returnDate   = System.currentTimeMillis(),
+                lentDate     = System.currentTimeMillis(),
+                createdAt    = System.currentTimeMillis()
+            )
+            val days = repository.reminderDays.first()
+            notificationScheduler.sendTestNotification(loan, days)
+            _uiState.update { it.copy(testNotificationSent = true) }
+        }
+    }
+
+    fun clearTestNotificationSent() = _uiState.update { it.copy(testNotificationSent = false) }
 
     fun onAutoSmsToggled(enabling: Boolean) {
         if (enabling) {

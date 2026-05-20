@@ -73,6 +73,13 @@ fun SettingsScreen(
         }
     }
 
+    LaunchedEffect(uiState.testNotificationSent) {
+        if (uiState.testNotificationSent) {
+            snackbarHostState.showSnackbar("Test notification fired — check your shade")
+            viewModel.clearTestNotificationSent()
+        }
+    }
+
     LaunchedEffect(uiState.exportResult) {
         uiState.exportResult?.let { success ->
             snackbarHostState.showSnackbar(if (success) "Backup saved to Downloads" else "Export failed. Try again.")
@@ -481,6 +488,21 @@ fun SettingsScreen(
                         }
                     }
                 )
+            }
+
+            // ── DEVELOPER (debug builds only) ─────────────────────────────
+            if (BuildConfig.DEBUG) {
+                Spacer(Modifier.height(24.dp))
+                SectionHeader("DEVELOPER")
+                SettingsGroup {
+                    SettingsRow(
+                        icon     = Icons.Outlined.BugReport,
+                        iconTint = MaterialTheme.colorScheme.error,
+                        title    = "Fire test notification",
+                        subtitle = "Uses first active loan, or a placeholder",
+                        onClick  = viewModel::sendTestNotification
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
