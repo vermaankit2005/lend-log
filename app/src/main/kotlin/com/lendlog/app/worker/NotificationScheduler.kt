@@ -64,6 +64,19 @@ class NotificationScheduler @Inject constructor(
 
     fun cancelAll(loanIds: List<String>) = loanIds.forEach { cancelForLoan(it) }
 
+    fun sendTestNotification(loan: Loan, reminderDays: Int = 3) {
+        val request = buildNotifRequest(
+            loanId       = loan.id,
+            itemName     = loan.itemName,
+            borrowerName = loan.borrowerName,
+            borrowerPhone = loan.borrowerPhone,
+            isOverdue    = loan.isOverdue,
+            delayMillis  = 0L,
+            reminderDays = reminderDays
+        )
+        workManager.enqueue(request)
+    }
+
     private fun buildNotifRequest(
         loanId: String,
         itemName: String,
