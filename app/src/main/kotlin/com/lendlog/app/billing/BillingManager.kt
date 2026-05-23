@@ -49,7 +49,8 @@ class BillingManager(private val context: Context) {
 
     fun disconnect() {
         billingClient?.endConnection()
-        scope.cancel()
+        // Don't cancel the scope — let any in-flight purchase acknowledgement complete
+        // to avoid Google auto-refunding an unacknowledged purchase within 3 days.
     }
 
     fun launchBillingFlow(onSuccess: () -> Unit, onFailure: () -> Unit) {
@@ -113,13 +114,21 @@ class BillingManager(private val context: Context) {
                 .build()
 
             val result = client.queryPurchasesAsync(params)
-            val hasPurchase = result.purchasesList.any { purchase ->
+            val validPurchases = result.purchasesList.filter { purchase ->
                 purchase.products.contains(PRODUCT_ID) &&
                         purchase.purchaseState == Purchase.PurchaseState.PURCHASED
             }
 
+            // Acknowledge any unacknowledged purchases to prevent auto-refund
+            validPurchases.filter { !it.isAcknowledged }.forEach { purchase ->
+                val ackParams = AcknowledgePurchaseParams.newBuilder()
+                    .setPurchaseToken(purchase.purchaseToken)
+                    .build()
+                client.acknowledgePurchase(ackParams)
+            }
+
             withContext(Dispatchers.Main) {
-                if (hasPurchase) onRestored() else onFailure()
+                if (validPurchases.isNotEmpty()) onRestored() else onFailure()
             }
         }
     }

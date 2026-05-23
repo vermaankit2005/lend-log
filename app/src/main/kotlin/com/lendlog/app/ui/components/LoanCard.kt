@@ -207,8 +207,8 @@ private fun StatusAndItemLine(loan: Loan, isDueSoon: Boolean) {
 
     val infiniteTransition = rememberInfiniteTransition(label = "overduePulse")
     val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue  = if (loan.isOverdue) 1.18f else 1f,
+        initialValue  = 1f,
+        targetValue   = if (loan.isOverdue) 1.18f else 1f,
         animationSpec = infiniteRepeatable(
             animation  = tween(700, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse

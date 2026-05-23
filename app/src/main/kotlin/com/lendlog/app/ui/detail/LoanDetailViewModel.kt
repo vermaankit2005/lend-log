@@ -41,13 +41,10 @@ class LoanDetailViewModel @Inject constructor(
                 repository.observeLoan(loanId),
                 repository.autoSmsEnabled,
                 repository.smsNudgeTipShown
-            ) { loan, autoSms, tipShown ->
-                _uiState.value.copy(
-                    loan = loan,
-                    autoSmsEnabled = autoSms,
-                    smsNudgeTipShown = tipShown
-                )
-            }.collect { state -> _uiState.value = state }
+            ) { loan, autoSms, tipShown -> Triple(loan, autoSms, tipShown) }
+            .collect { (loan, autoSms, tipShown) ->
+                _uiState.update { it.copy(loan = loan, autoSmsEnabled = autoSms, smsNudgeTipShown = tipShown) }
+            }
         }
     }
 

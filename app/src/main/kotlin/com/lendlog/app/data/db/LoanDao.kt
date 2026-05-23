@@ -47,4 +47,10 @@ interface LoanDao {
 
     @Query("DELETE FROM loans")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceAll(loans: List<Loan>) {
+        deleteAll()
+        insertAll(loans)
+    }
 }

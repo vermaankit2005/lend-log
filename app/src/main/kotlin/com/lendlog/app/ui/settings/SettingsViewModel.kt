@@ -9,6 +9,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private data class PrefsSnapshot(
+    val unlocked: Boolean,
+    val notif: Boolean,
+    val days: Int,
+    val ts: Long,
+    val autoSms: Boolean
+)
+
 data class SettingsUiState(
     val isUnlocked: Boolean = false,
     val showPaywall: Boolean = false,
@@ -41,14 +49,16 @@ class SettingsViewModel @Inject constructor(
                 repository.lastBackupTimestamp,
                 repository.autoSmsEnabled
             ) { unlocked, notif, days, ts, autoSms ->
-                _uiState.value.copy(
-                    isUnlocked           = unlocked,
-                    notificationsEnabled = notif,
-                    reminderDays         = days,
-                    lastBackupTimestamp  = ts,
-                    autoSmsEnabled       = autoSms
-                )
-            }.collect { state -> _uiState.value = state }
+                PrefsSnapshot(unlocked, notif, days, ts, autoSms)
+            }.collect { snap ->
+                _uiState.update { it.copy(
+                    isUnlocked           = snap.unlocked,
+                    notificationsEnabled = snap.notif,
+                    reminderDays         = snap.days,
+                    lastBackupTimestamp  = snap.ts,
+                    autoSmsEnabled       = snap.autoSms
+                ) }
+            }
         }
     }
 

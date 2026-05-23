@@ -12,10 +12,9 @@ class BootReceiver : BroadcastReceiver() {
 
         val constraints = Constraints.Builder()
             .setRequiresCharging(true)
-            .setRequiresDeviceIdle(true)
             .build()
 
-        val request = PeriodicWorkRequestBuilder<NightlyBackupWorker>(1, TimeUnit.DAYS)
+        val request = PeriodicWorkRequestBuilder<NightlyBackupWorker>(1, TimeUnit.DAYS, 4, TimeUnit.HOURS)
             .setConstraints(constraints)
             .build()
 

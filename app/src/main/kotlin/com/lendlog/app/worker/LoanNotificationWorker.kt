@@ -16,6 +16,7 @@ import com.lendlog.app.LendLogApp
 import com.lendlog.app.MainActivity
 import com.lendlog.app.R
 import com.lendlog.app.data.datastore.AppPreferences
+import com.lendlog.app.data.db.LoanDao
 import com.lendlog.app.util.SmsHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -25,7 +26,8 @@ import kotlinx.coroutines.flow.first
 class LoanNotificationWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val appPreferences: AppPreferences
+    private val appPreferences: AppPreferences,
+    private val loanDao: LoanDao
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -44,6 +46,10 @@ class LoanNotificationWorker @AssistedInject constructor(
         val isOverdue     = inputData.getBoolean(KEY_IS_OVERDUE, false)
         val borrowerPhone = inputData.getString(KEY_BORROWER_PHONE)
         val reminderDays  = inputData.getInt(KEY_REMINDER_DAYS, 3)
+
+        // Skip if the loan was returned after this work was enqueued
+        val loan = loanDao.getLoanById(loanId)
+        if (loan == null || loan.isReturned) return Result.success()
 
         postNotification(loanId, itemName, borrowerName, isOverdue, reminderDays)
 
