@@ -98,43 +98,47 @@ class AddLoanViewModel @Inject constructor(
     }
 
     private suspend fun doSaveLoan(state: AddLoanUiState) {
-        _uiState.update { it.copy(isSaving = true) }
-        if (editLoanId != null) {
-            val existing = repository.observeLoan(editLoanId).first() ?: return
-            val updated = existing.copy(
-                itemName = state.itemName.trim().titleCase(),
-                notes = state.notes.trim().ifEmpty { null },
-                photoUri = state.photoUri,
-                borrowerName = state.borrowerName.trim().titleCase(),
-                borrowerContactId = state.borrowerContactId,
-                borrowerPhone = state.borrowerPhone,
-                lentDate = state.lentDate,
-                returnDate = state.returnDate!!,
-                tags = state.tags.trim()
-            )
-            repository.updateLoan(updated)
-            notificationScheduler.cancelForLoan(editLoanId)
-            val notifEnabled = repository.notificationsEnabled.first()
-            val days = repository.reminderDays.first()
-            if (notifEnabled && !updated.isReturned) notificationScheduler.scheduleForLoan(updated, days)
-            _uiState.update { it.copy(isSaving = false, savedLoanId = editLoanId) }
-        } else {
-            val loan = repository.createNewLoan(
-                itemName = state.itemName.trim().titleCase(),
-                notes = state.notes.trim().ifEmpty { null },
-                photoUri = state.photoUri,
-                borrowerName = state.borrowerName.trim().titleCase(),
-                borrowerContactId = state.borrowerContactId,
-                borrowerPhone = state.borrowerPhone,
-                lentDate = state.lentDate,
-                returnDate = state.returnDate!!,
-                tags = state.tags.trim()
-            )
-            repository.addLoan(loan)
-            val notifEnabled = repository.notificationsEnabled.first()
-            val days = repository.reminderDays.first()
-            if (notifEnabled) notificationScheduler.scheduleForLoan(loan, days)
-            _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
+        _uiState.update { it.copy(isSaving = true, error = null) }
+        try {
+            if (editLoanId != null) {
+                val existing = repository.observeLoan(editLoanId).first() ?: return
+                val updated = existing.copy(
+                    itemName = state.itemName.trim(),
+                    notes = state.notes.trim().ifEmpty { null },
+                    photoUri = state.photoUri,
+                    borrowerName = state.borrowerName.trim().titleCase(),
+                    borrowerContactId = state.borrowerContactId,
+                    borrowerPhone = state.borrowerPhone,
+                    lentDate = state.lentDate,
+                    returnDate = state.returnDate!!,
+                    tags = state.tags.trim()
+                )
+                repository.updateLoan(updated)
+                notificationScheduler.cancelForLoan(editLoanId)
+                val notifEnabled = repository.notificationsEnabled.first()
+                val days = repository.reminderDays.first()
+                if (notifEnabled && !updated.isReturned) notificationScheduler.scheduleForLoan(updated, days)
+                _uiState.update { it.copy(isSaving = false, savedLoanId = editLoanId) }
+            } else {
+                val loan = repository.createNewLoan(
+                    itemName = state.itemName.trim(),
+                    notes = state.notes.trim().ifEmpty { null },
+                    photoUri = state.photoUri,
+                    borrowerName = state.borrowerName.trim().titleCase(),
+                    borrowerContactId = state.borrowerContactId,
+                    borrowerPhone = state.borrowerPhone,
+                    lentDate = state.lentDate,
+                    returnDate = state.returnDate!!,
+                    tags = state.tags.trim()
+                )
+                repository.addLoan(loan)
+                val notifEnabled = repository.notificationsEnabled.first()
+                val days = repository.reminderDays.first()
+                if (notifEnabled) notificationScheduler.scheduleForLoan(loan, days)
+                _uiState.update { it.copy(isSaving = false, savedLoanId = loan.id) }
+            }
+        } catch (e: Exception) {
+            _uiState.update { it.copy(isSaving = false, error = "Failed to save. Please try again.") }
         }
     }
 }

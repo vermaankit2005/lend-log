@@ -6,6 +6,9 @@ import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -23,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -62,6 +66,7 @@ fun AddLoanScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showPhotoSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.savedLoanId) {
@@ -77,13 +82,18 @@ fun AddLoanScreen(
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { viewModel.updatePhotoUri(it.toString()) }
+        uri?.let { selected ->
+            scope.launch {
+                val saved = withContext(Dispatchers.IO) { copyUriToAppStorage(context, selected) }
+                if (saved != null) viewModel.updatePhotoUri(saved.toString())
+            }
+        }
     }
 
     LaunchedEffect(cameraPermission.status.isGranted, pendingCameraLaunch) {
         if (pendingCameraLaunch && cameraPermission.status.isGranted) {
             pendingCameraLaunch = false
-            val uri = createTempPhotoFile(context)
+            val uri = createPermanentPhotoFile(context)
             tempCameraUri = uri
             uri?.let { cameraLauncher.launch(it) }
         }
@@ -126,7 +136,7 @@ fun AddLoanScreen(
                     onClick = {
                         showPhotoSheet = false
                         if (cameraPermission.status.isGranted) {
-                            tempCameraUri = createTempPhotoFile(context)
+                            tempCameraUri = createPermanentPhotoFile(context)
                             tempCameraUri?.let { cameraLauncher.launch(it) }
                         } else {
                             pendingCameraLaunch = true
@@ -160,7 +170,7 @@ fun AddLoanScreen(
                     title = { Text(if (uiState.isEditMode) "Edit Loan" else "New Loan", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = N800) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = N800)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = N50)
@@ -403,7 +413,9 @@ private fun DateField(
     allowPastDates: Boolean = false,
     allowFutureDates: Boolean = true
 ) {
-    val calendar = Calendar.getInstance()
+    val calendar = Calendar.getInstance().apply {
+        selectedDate?.let { timeInMillis = it }
+    }
     val now = System.currentTimeMillis()
 
     val displayText = selectedDate?.let { date ->
@@ -489,8 +501,17 @@ private fun QuickDateChips(onDateSelected: (Long) -> Unit) {
     }
 }
 
-private fun createTempPhotoFile(context: Context): Uri? = try {
-    val tempDir = File(context.cacheDir, "camera_temp").also { it.mkdirs() }
-    val tempFile = File.createTempFile("photo_", ".jpg", tempDir)
-    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
+private fun createPermanentPhotoFile(context: Context): Uri? = try {
+    val dir = File(context.filesDir, "loan_photos").also { it.mkdirs() }
+    val file = File(dir, "photo_${java.util.UUID.randomUUID()}.jpg")
+    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+} catch (e: Exception) { null }
+
+private fun copyUriToAppStorage(context: Context, source: Uri): Uri? = try {
+    val dir = File(context.filesDir, "loan_photos").also { it.mkdirs() }
+    val dest = File(dir, "photo_${java.util.UUID.randomUUID()}.jpg")
+    context.contentResolver.openInputStream(source)?.use { input ->
+        dest.outputStream().use { output -> input.copyTo(output) }
+    }
+    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", dest)
 } catch (e: Exception) { null }

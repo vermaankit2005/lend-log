@@ -28,3 +28,9 @@
 
 # Billing
 -keep class com.android.billingclient.** { *; }
+
+# WorkManager / HiltWorker — keep AssistedInject generated classes
+-keep class * extends androidx.work.ListenableWorker { *; }
+
+# Konfetti — keep models used via reflection
+-keep class nl.dionsegijn.konfetti.** { *; }

@@ -148,8 +148,8 @@ class LoanRepository @Inject constructor(
     suspend fun restoreFromJson(jsonContent: String): Boolean {
         return try {
             val loans = Json.decodeFromString<List<Loan>>(jsonContent)
-            loanDao.deleteAll()
-            loanDao.insertAll(loans)
+            if (loans.isEmpty()) return false
+            loanDao.replaceAll(loans)
             true
         } catch (e: Exception) {
             false

@@ -10,7 +10,11 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -18,6 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lendlog.app.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,10 +36,13 @@ fun NudgeBottomSheet(
     onSmsSelected: () -> Unit
 ) {
     val context = LocalContext.current
-    val isWhatsAppInstalled = remember {
-        listOf("com.whatsapp", "com.whatsapp.w4b").any { pkg ->
-            try { context.packageManager.getPackageInfo(pkg, 0); true }
-            catch (_: PackageManager.NameNotFoundException) { false }
+    var isWhatsAppInstalled by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isWhatsAppInstalled = withContext(Dispatchers.IO) {
+            listOf("com.whatsapp", "com.whatsapp.w4b").any { pkg ->
+                try { context.packageManager.getPackageInfo(pkg, 0); true }
+                catch (_: PackageManager.NameNotFoundException) { false }
+            }
         }
     }
 
