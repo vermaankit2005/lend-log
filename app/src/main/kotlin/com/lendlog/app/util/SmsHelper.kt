@@ -1,11 +1,12 @@
 package com.lendlog.app.util
 
-import android.telephony.SmsManager
+// AUTO_SMS_DISABLED: SmsManager import removed — requires SEND_SMS permission; re-enable when Play Store approved
+// import android.telephony.SmsManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
+// import android.os.Build  // AUTO_SMS_DISABLED: only needed by sendAutoSms
 import android.widget.Toast
 
 object SmsHelper {
@@ -26,6 +27,9 @@ object SmsHelper {
         }
     }
 
+    // AUTO_SMS_DISABLED: sends SMS programmatically via SmsManager — needs SEND_SMS permission
+    // Re-enable after Play Store approves the SEND_SMS declaration.
+    /*
     fun sendAutoSms(context: Context, phone: String, itemName: String) {
         val cleanPhone = phone.replace(Regex("[^\\d+]"), "")
         try {
@@ -39,4 +43,5 @@ object SmsHelper {
             }
         } catch (_: Exception) { }
     }
+    */
 }

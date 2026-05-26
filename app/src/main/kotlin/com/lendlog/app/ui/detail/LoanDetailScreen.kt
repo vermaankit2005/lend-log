@@ -121,12 +121,15 @@ fun LoanDetailScreen(
                 },
                 onSmsSelected = {
                     SmsHelper.openSmsApp(context, loan.borrowerPhone, loan.itemName)
+                    // AUTO_SMS_DISABLED: auto SMS upsell tip removed — re-enable after Play Store approves SEND_SMS
+                    /*
                     if (!uiState.autoSmsEnabled && !uiState.smsNudgeTipShown) {
                         viewModel.markSmsNudgeTipShown()
                         scope.launch {
                             snackbarHostState.showSnackbar("Want this automated? Enable Auto SMS in Settings.")
                         }
                     }
+                    */
                 }
             )
         }

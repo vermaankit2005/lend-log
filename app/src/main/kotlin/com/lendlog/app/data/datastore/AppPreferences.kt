@@ -28,8 +28,9 @@ class AppPreferences @Inject constructor(
         val THEME_MODE             = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED  = booleanPreferencesKey("notifications_enabled")
         val REMINDER_DAYS          = intPreferencesKey("reminder_days")
-        val AUTO_SMS_ENABLED       = booleanPreferencesKey("auto_sms_enabled")
-        val SMS_NUDGE_TIP_SHOWN    = booleanPreferencesKey("sms_nudge_tip_shown")
+        // AUTO_SMS_DISABLED: keys preserved for future re-enable
+        // val AUTO_SMS_ENABLED       = booleanPreferencesKey("auto_sms_enabled")
+        // val SMS_NUDGE_TIP_SHOWN    = booleanPreferencesKey("sms_nudge_tip_shown")
     }
 
     val isUnlocked: Flow<Boolean> = context.dataStore.data.map { prefs ->
@@ -56,6 +57,8 @@ class AppPreferences @Inject constructor(
         prefs[Keys.REMINDER_DAYS] ?: 3
     }
 
+    // AUTO_SMS_DISABLED: flows preserved for future re-enable
+    /*
     val autoSmsEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[Keys.AUTO_SMS_ENABLED] ?: false
     }
@@ -63,6 +66,7 @@ class AppPreferences @Inject constructor(
     val smsNudgeTipShown: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[Keys.SMS_NUDGE_TIP_SHOWN] ?: false
     }
+    */
 
     suspend fun setUnlocked(unlocked: Boolean) {
         context.dataStore.edit { prefs -> prefs[Keys.IS_UNLOCKED] = unlocked }
@@ -88,6 +92,8 @@ class AppPreferences @Inject constructor(
         context.dataStore.edit { prefs -> prefs[Keys.REMINDER_DAYS] = days }
     }
 
+    // AUTO_SMS_DISABLED: setters preserved for future re-enable
+    /*
     suspend fun setAutoSmsEnabled(enabled: Boolean) {
         context.dataStore.edit { prefs -> prefs[Keys.AUTO_SMS_ENABLED] = enabled }
     }
@@ -95,4 +101,5 @@ class AppPreferences @Inject constructor(
     suspend fun setSmsNudgeTipShown(shown: Boolean) {
         context.dataStore.edit { prefs -> prefs[Keys.SMS_NUDGE_TIP_SHOWN] = shown }
     }
+    */
 }
