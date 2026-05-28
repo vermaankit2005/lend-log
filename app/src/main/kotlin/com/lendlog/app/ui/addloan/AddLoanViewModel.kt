@@ -73,9 +73,7 @@ class AddLoanViewModel @Inject constructor(
             current.copy(
                 borrowerName      = name,
                 borrowerContactId = contactId,
-                // Contact picker supplies a contactId — trust its phone value.
-                // Manual text entry (no contactId) preserves any phone already on record.
-                borrowerPhone     = if (contactId != null) phone else current.borrowerPhone
+                borrowerPhone     = phone
             )
         }
     fun updateLentDate(epochMillis: Long) = _uiState.update { it.copy(lentDate = epochMillis) }

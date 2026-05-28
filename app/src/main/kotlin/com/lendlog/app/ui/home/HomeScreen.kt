@@ -77,7 +77,9 @@ fun HomeScreen(
                 containerColor = com.lendlog.app.ui.theme.Ink,
                 contentColor   = Color.White,
                 shape          = CircleShape,
-                modifier       = Modifier.scale(fabScale.value),
+                modifier       = Modifier
+                    .scale(fabScale.value)
+                    .padding(bottom = bottomPadding.calculateBottomPadding()),
                 elevation      = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
             ) {
                 Icon(Icons.Outlined.Add, contentDescription = "Add Loan", modifier = Modifier.size(26.dp))
