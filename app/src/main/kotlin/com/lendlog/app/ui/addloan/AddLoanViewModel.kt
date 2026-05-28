@@ -69,7 +69,13 @@ class AddLoanViewModel @Inject constructor(
     fun updateNotes(value: String) = _uiState.update { it.copy(notes = value) }
     fun updatePhotoUri(uri: String?) = _uiState.update { it.copy(photoUri = uri) }
     fun updateBorrower(name: String, contactId: String? = null, phone: String? = null) =
-        _uiState.update { it.copy(borrowerName = name, borrowerContactId = contactId, borrowerPhone = phone) }
+        _uiState.update { current ->
+            current.copy(
+                borrowerName      = name,
+                borrowerContactId = contactId,
+                borrowerPhone     = phone
+            )
+        }
     fun updateLentDate(epochMillis: Long) = _uiState.update { it.copy(lentDate = epochMillis) }
     fun updateReturnDate(epochMillis: Long) = _uiState.update { it.copy(returnDate = epochMillis) }
     fun updateTags(value: String) = _uiState.update { it.copy(tags = value) }
@@ -79,13 +85,7 @@ class AddLoanViewModel @Inject constructor(
     fun saveLoan() {
         val state = _uiState.value
         if (!state.isValid) return
-        viewModelScope.launch {
-            if (editLoanId == null && !repository.canAddLoan()) {
-                _uiState.update { it.copy(showPaywall = true) }
-                return@launch
-            }
-            doSaveLoan(state)
-        }
+        viewModelScope.launch { doSaveLoan(state) }
     }
 
     fun onPurchased() {
@@ -131,7 +131,11 @@ class AddLoanViewModel @Inject constructor(
                     returnDate = state.returnDate!!,
                     tags = state.tags.trim()
                 )
-                repository.addLoan(loan)
+                val added = repository.addLoanIfAllowed(loan)
+                if (!added) {
+                    _uiState.update { it.copy(isSaving = false, showPaywall = true) }
+                    return
+                }
                 val notifEnabled = repository.notificationsEnabled.first()
                 val days = repository.reminderDays.first()
                 if (notifEnabled) notificationScheduler.scheduleForLoan(loan, days)

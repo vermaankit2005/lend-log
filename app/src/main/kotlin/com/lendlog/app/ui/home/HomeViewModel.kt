@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.data.repository.LoanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -45,7 +46,11 @@ data class HomeUiState(
     val groupedByPerson: Map<String, List<Loan>>
         get() = displayedLoans
             .groupBy { it.borrowerName.trim().lowercase() }
-            .entries.associate { (_, loans) -> loans.first().borrowerName to loans }
+            .entries.associate { (key, loans) ->
+                // Title-case from the normalised key so casing variants ("john", "John") merge
+                // into one deterministic display name regardless of insertion order.
+                key.split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } } to loans
+            }
 }
 
 @HiltViewModel
@@ -56,13 +61,20 @@ class HomeViewModel @Inject constructor(
     private val _feedView = MutableStateFlow(FeedView.BY_STATUS)
     private val _filter = MutableStateFlow(FilterType.ALL)
 
+    // Ticks every minute so isOverdue transitions are reflected without a DB write.
+    private val _ticker = flow {
+        while (true) { emit(Unit); delay(60_000L) }
+    }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
+
     val uiState: StateFlow<HomeUiState> = combine(
-        repository.activeLoans,
-        _feedView,
-        _filter,
-        repository.activeLoanCount,
-        repository.isUnlocked
-    ) { loans, feedView, filter, count, unlocked ->
+        combine(repository.activeLoans, _feedView, _filter) { loans, view, filter ->
+            Triple(loans, view, filter)
+        },
+        combine(repository.activeLoanCount, repository.isUnlocked) { count, unlocked ->
+            count to unlocked
+        },
+        _ticker
+    ) { (loans, feedView, filter), (count, unlocked), _ ->
         HomeUiState(
             loans = loans,
             feedView = feedView,

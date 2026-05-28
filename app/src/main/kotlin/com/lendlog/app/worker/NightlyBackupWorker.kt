@@ -20,6 +20,6 @@ class NightlyBackupWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        return if (repository.exportToDownloads()) Result.success() else Result.retry()
+        return if (repository.exportToDownloads()) Result.success() else Result.failure()
     }
 }

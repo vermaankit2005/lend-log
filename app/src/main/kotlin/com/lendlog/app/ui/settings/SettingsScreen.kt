@@ -93,9 +93,25 @@ fun SettingsScreen(
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
             context.contentResolver.openInputStream(it)?.use { stream ->
-                viewModel.restoreFromJson(stream.bufferedReader().readText())
+                viewModel.requestRestore(stream.bufferedReader().readText())
             }
         }
+    }
+
+    if (uiState.showRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissRestoreConfirm,
+            title = { Text("Replace all current loans?", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold) },
+            text  = { Text("This will replace every loan in the app with the contents of the backup file. Any loans not in the backup will be permanently lost.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            confirmButton = {
+                TextButton(onClick = viewModel::confirmRestore) {
+                    Text("Replace", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissRestoreConfirm) { Text("Cancel") }
+            }
+        )
     }
 
     if (uiState.showPaywall) {

@@ -43,6 +43,16 @@ class LoanRepository @Inject constructor(
 
     suspend fun addLoan(loan: Loan) = loanDao.insertLoan(loan)
 
+    // Atomically checks the free-tier cap and inserts in a single Room @Transaction.
+    // Returns false if the user is on the free tier and all 3 slots are taken.
+    suspend fun addLoanIfAllowed(loan: Loan): Boolean {
+        if (appPreferences.isUnlocked.first()) {
+            loanDao.insertLoan(loan)
+            return true
+        }
+        return loanDao.insertIfWithinLimit(loan, 3)
+    }
+
     suspend fun updateLoan(loan: Loan) = loanDao.updateLoan(loan)
 
     suspend fun markReturned(loanId: String) {

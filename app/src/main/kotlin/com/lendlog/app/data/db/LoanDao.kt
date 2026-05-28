@@ -53,4 +53,13 @@ interface LoanDao {
         deleteAll()
         insertAll(loans)
     }
+
+    // Atomically checks the active count and inserts only if within the free-tier limit.
+    // Returns true if inserted, false if the cap was already reached.
+    @Transaction
+    suspend fun insertIfWithinLimit(loan: Loan, limit: Int): Boolean {
+        if (getActiveLoanCount() >= limit) return false
+        insertLoan(loan)
+        return true
+    }
 }
