@@ -27,6 +27,8 @@ data class SettingsUiState(
     val exportResult: Boolean? = null,
     val isRestoring: Boolean = false,
     val restoreResult: Boolean? = null,
+    val showRestoreConfirm: Boolean = false,
+    val pendingRestoreJson: String? = null,
     // AUTO_SMS_DISABLED: val autoSmsEnabled: Boolean = false,
     // AUTO_SMS_DISABLED: val showAutoSmsConfirm: Boolean = false,
 )
@@ -103,12 +105,22 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun restoreFromJson(jsonContent: String) {
+    fun requestRestore(jsonContent: String) {
+        _uiState.update { it.copy(showRestoreConfirm = true, pendingRestoreJson = jsonContent) }
+    }
+
+    fun confirmRestore() {
+        val json = _uiState.value.pendingRestoreJson ?: return
+        _uiState.update { it.copy(showRestoreConfirm = false, pendingRestoreJson = null) }
         viewModelScope.launch {
             _uiState.update { it.copy(isRestoring = true, restoreResult = null) }
-            val success = repository.restoreFromJson(jsonContent)
+            val success = repository.restoreFromJson(json)
             _uiState.update { it.copy(isRestoring = false, restoreResult = success) }
         }
+    }
+
+    fun dismissRestoreConfirm() {
+        _uiState.update { it.copy(showRestoreConfirm = false, pendingRestoreJson = null) }
     }
 
     fun clearExportResult() = _uiState.update { it.copy(exportResult = null) }

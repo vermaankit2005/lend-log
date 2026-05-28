@@ -36,6 +36,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// Shared formatters — safe for single-threaded Compose use (all recomposition on Main thread).
+private val FMT_SHORT_DATE = SimpleDateFormat("MMM d", Locale.getDefault())
+
 private val avatarPalette = listOf(
     Color(0xFF0E9AA7), // teal
     Color(0xFF7C3AED), // violet
@@ -139,7 +142,7 @@ fun LoanCard(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text  = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(loan.lentDate)),
+                        text  = FMT_SHORT_DATE.format(Date(loan.lentDate)),
                         style = MaterialTheme.typography.labelSmall,
                         color = N400
                     )
@@ -200,7 +203,7 @@ private fun StatusAndItemLine(loan: Loan, isDueSoon: Boolean) {
         isDueSoon && daysDiff == 0 -> "Due today" to Warning
         isDueSoon       -> "Due in $daysDiff day${if (daysDiff != 1) "s" else ""}" to Warning
         else            -> {
-            val absDate = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(loan.returnDate))
+            val absDate = FMT_SHORT_DATE.format(Date(loan.returnDate))
             "Due $absDate" to N500
         }
     }

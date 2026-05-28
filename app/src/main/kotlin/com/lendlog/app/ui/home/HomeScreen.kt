@@ -3,6 +3,9 @@ package com.lendlog.app.ui.home
 import android.Manifest
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
@@ -16,6 +19,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +32,7 @@ import com.lendlog.app.data.db.Loan
 import com.lendlog.app.ui.components.EmptyState
 import com.lendlog.app.ui.components.LendLogTopBar
 import com.lendlog.app.ui.components.LoanCard
+import com.lendlog.app.ui.paywall.PaywallSheet
 import com.lendlog.app.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -39,11 +45,44 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showPaywall by remember { mutableStateOf(false) }
     RequestNotificationPermission()
+
+    if (showPaywall) {
+        PaywallSheet(
+            onDismiss  = { showPaywall = false },
+            onPurchased = { showPaywall = false }
+        )
+    }
+
+    val fabScale = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        fabScale.animateTo(
+            targetValue   = 1f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+        )
+    }
+
+    val onFabClick = {
+        if (!uiState.isUnlocked && uiState.activeLoanCount >= 3) showPaywall = true
+        else onNavigateToAdd()
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
         topBar = { LendLogTopBar(showLogo = true) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick        = onFabClick,
+                containerColor = com.lendlog.app.ui.theme.Ink,
+                contentColor   = Color.White,
+                shape          = CircleShape,
+                modifier       = Modifier.scale(fabScale.value),
+                elevation      = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp, pressedElevation = 8.dp)
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = "Add Loan", modifier = Modifier.size(26.dp))
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
@@ -53,9 +92,17 @@ fun HomeScreen(
                 .padding(bottom = bottomPadding.calculateBottomPadding())
         ) {
             FeedToggle(
-                feedView      = uiState.feedView,
+                feedView         = uiState.feedView,
                 onFeedViewChange = viewModel::setFeedView
             )
+
+            if (!uiState.isUnlocked && uiState.activeLoanCount > 0) {
+                SlotUsageBanner(
+                    used  = uiState.activeLoanCount,
+                    total = 3,
+                    onUpgradeClick = { showPaywall = true }
+                )
+            }
 
             if (uiState.loans.isEmpty()) {
                 Box(
@@ -63,10 +110,10 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyState(
-                        icon      = Icons.Outlined.Inventory2,
-                        title     = "Nothing lent out",
-                        body      = "Snap a photo when you lend something — we'll remind you when it's due back.",
-                        ctaLabel  = "Log your first loan",
+                        icon       = Icons.Outlined.Inventory2,
+                        title      = "Nothing lent out",
+                        body       = "Snap a photo when you lend something — we'll remind you when it's due back.",
+                        ctaLabel   = "Log your first loan",
                         onCtaClick = onNavigateToAdd
                     )
                 }
@@ -76,6 +123,27 @@ fun HomeScreen(
                     FeedView.BY_PERSON -> ByPersonFeed(grouped = uiState.groupedByPerson, onLoanClick = onNavigateToDetail)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SlotUsageBanner(used: Int, total: Int, onUpgradeClick: () -> Unit) {
+    val remaining = total - used
+    Row(
+        modifier              = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment     = Alignment.CenterVertically
+    ) {
+        Text(
+            text  = "$used of $total free slots used",
+            style = MaterialTheme.typography.labelMedium,
+            color = if (remaining == 0) MaterialTheme.colorScheme.error else N500
+        )
+        TextButton(onClick = onUpgradeClick, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+            Text("Unlock unlimited", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         }
     }
 }

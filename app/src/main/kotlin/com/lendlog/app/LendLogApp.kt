@@ -84,7 +84,10 @@ class LendLogApp : Application(), Configuration.Provider {
 
     private fun scheduleNightlyBackup() {
         val constraints = Constraints.Builder()
-            .setRequiresCharging(true)
+            .setRequiresBatteryNotLow(true)
+            .apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) setRequiresDeviceIdle(true)
+            }
             .build()
 
         val request = PeriodicWorkRequestBuilder<NightlyBackupWorker>(1, TimeUnit.DAYS, 4, TimeUnit.HOURS)

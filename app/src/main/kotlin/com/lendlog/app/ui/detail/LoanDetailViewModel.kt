@@ -71,4 +71,6 @@ class LoanDetailViewModel @Inject constructor(
             _uiState.update { it.copy(showReturnDialog = false, showConfetti = true) }
         }
     }
+
+    fun clearConfetti() = _uiState.update { it.copy(showConfetti = false) }
 }

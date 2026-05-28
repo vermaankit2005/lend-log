@@ -1,31 +1,21 @@
 package com.lendlog.app.navigation
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -86,42 +76,8 @@ fun AppNavigation(deepLinkLoanId: String? = null) {
         }
     }
 
-    // FAB bounce-in whenever it becomes visible
-    val fabScale = remember { Animatable(0f) }
-    LaunchedEffect(currentRoute == Routes.HOME) {
-        if (currentRoute == Routes.HOME) {
-            fabScale.snapTo(0f)
-            fabScale.animateTo(
-                targetValue    = 1f,
-                animationSpec  = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness    = Spring.StiffnessMedium
-                )
-            )
-        } else {
-            fabScale.snapTo(0f)
-        }
-    }
-
     Scaffold(
         contentWindowInsets = WindowInsets(0),
-        floatingActionButton = {
-            if (currentRoute == Routes.HOME) {
-                FloatingActionButton(
-                    onClick        = { navController.navigate(Routes.ADD_LOAN) },
-                    containerColor = Ink,
-                    contentColor   = Color.White,
-                    shape          = CircleShape,
-                    modifier       = Modifier.scale(fabScale.value),
-                    elevation      = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 4.dp,
-                        pressedElevation = 8.dp
-                    )
-                ) {
-                    Icon(Icons.Outlined.Add, contentDescription = "Add Loan", modifier = Modifier.size(26.dp))
-                }
-            }
-        },
         bottomBar = {
             if (currentRoute in bottomNavRoutes) {
                 Column {

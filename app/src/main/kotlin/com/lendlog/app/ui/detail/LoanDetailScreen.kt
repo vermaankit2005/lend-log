@@ -66,6 +66,7 @@ fun LoanDetailScreen(
     LaunchedEffect(uiState.showConfetti) {
         if (uiState.showConfetti) {
             delay(2000L)
+            viewModel.clearConfetti()
             onNavigateBack()
         }
     }
