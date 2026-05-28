@@ -1,5 +1,8 @@
 package com.lendlog.app.ui.paywall
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,9 +15,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.lendlog.app.billing.BillingManager
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.lendlog.app.ui.components.TealGradientButton
 import com.lendlog.app.ui.theme.*
+
+private fun Context.findActivity(): Activity? {
+    var ctx = this
+    while (ctx is ContextWrapper) {
+        if (ctx is Activity) return ctx
+        ctx = ctx.baseContext
+    }
+    return null
+}
 
 private val benefits = listOf(
     "Unlimited active loans",
@@ -27,14 +39,12 @@ private val benefits = listOf(
 @Composable
 fun PaywallSheet(
     onDismiss: () -> Unit,
-    onPurchased: () -> Unit
+    onPurchased: () -> Unit,
+    viewModel: PaywallViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
-    val billingManager = remember { BillingManager(context) }
-
-    LaunchedEffect(Unit) { billingManager.connect() }
-    DisposableEffect(Unit) { onDispose { billingManager.disconnect() } }
+    var showPendingMessage by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -51,8 +61,7 @@ fun PaywallSheet(
         ) {
             // Icon
             Box(
-                modifier         = Modifier
-                    .size(64.dp),
+                modifier         = Modifier.size(64.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -81,6 +90,17 @@ fun PaywallSheet(
                 textAlign = TextAlign.Center,
                 modifier  = Modifier.widthIn(max = 300.dp)
             )
+
+            if (showPendingMessage) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text      = "Payment pending — you'll be unlocked once it clears.",
+                    style     = MaterialTheme.typography.bodySmall,
+                    color     = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier  = Modifier.widthIn(max = 300.dp)
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -114,10 +134,14 @@ fun PaywallSheet(
             TealGradientButton(
                 text    = if (isLoading) "Processing…" else "Unlock for \$2.99",
                 onClick = {
+                    val activity = context.findActivity() ?: return@TealGradientButton
                     isLoading = true
-                    billingManager.launchBillingFlow(
+                    showPendingMessage = false
+                    viewModel.launchBillingFlow(
+                        activity  = activity,
                         onSuccess = { isLoading = false; onPurchased() },
-                        onFailure = { isLoading = false }
+                        onFailure = { isLoading = false },
+                        onPending = { isLoading = false; showPendingMessage = true }
                     )
                 },
                 enabled  = !isLoading,
@@ -134,7 +158,7 @@ fun PaywallSheet(
                 TextButton(
                     onClick = {
                         isLoading = true
-                        billingManager.restorePurchases(
+                        viewModel.restorePurchases(
                             onRestored = { isLoading = false; onPurchased() },
                             onFailure  = { isLoading = false }
                         )
