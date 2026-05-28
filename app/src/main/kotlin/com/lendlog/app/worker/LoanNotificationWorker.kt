@@ -31,21 +31,19 @@ class LoanNotificationWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
-        const val KEY_LOAN_ID        = "loan_id"
-        const val KEY_ITEM_NAME      = "item_name"
-        const val KEY_BORROWER_NAME  = "borrower_name"
-        const val KEY_IS_OVERDUE     = "is_overdue"
-        const val KEY_BORROWER_PHONE = "borrower_phone"
-        const val KEY_REMINDER_DAYS  = "reminder_days"
+        const val KEY_LOAN_ID       = "loan_id"
+        const val KEY_ITEM_NAME     = "item_name"
+        const val KEY_BORROWER_NAME = "borrower_name"
+        const val KEY_IS_OVERDUE    = "is_overdue"
+        const val KEY_REMINDER_DAYS = "reminder_days"
     }
 
     override suspend fun doWork(): Result {
-        val loanId        = inputData.getString(KEY_LOAN_ID)       ?: return Result.failure()
-        val itemName      = inputData.getString(KEY_ITEM_NAME)     ?: return Result.failure()
-        val borrowerName  = inputData.getString(KEY_BORROWER_NAME) ?: return Result.failure()
-        val isOverdue     = inputData.getBoolean(KEY_IS_OVERDUE, false)
-        val borrowerPhone = inputData.getString(KEY_BORROWER_PHONE)
-        val reminderDays  = inputData.getInt(KEY_REMINDER_DAYS, 3)
+        val loanId       = inputData.getString(KEY_LOAN_ID)       ?: return Result.failure()
+        val itemName     = inputData.getString(KEY_ITEM_NAME)     ?: return Result.failure()
+        val borrowerName = inputData.getString(KEY_BORROWER_NAME) ?: return Result.failure()
+        val isOverdue    = inputData.getBoolean(KEY_IS_OVERDUE, false)
+        val reminderDays = inputData.getInt(KEY_REMINDER_DAYS, 3)
 
         // Skip if the loan was returned after this work was enqueued
         val loan = loanDao.getLoanById(loanId)

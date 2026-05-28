@@ -78,7 +78,15 @@ fun AddLoanScreen(
     var pendingCameraLaunch by remember { mutableStateOf(false) }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success && tempCameraUri != null) viewModel.updatePhotoUri(tempCameraUri.toString())
+        if (success && tempCameraUri != null) {
+            viewModel.updatePhotoUri(tempCameraUri.toString())
+        } else {
+            // Camera cancelled or failed — delete the pre-created file to avoid orphans.
+            tempCameraUri?.lastPathSegment?.let { segment ->
+                File(context.filesDir, "loan_photos/${File(segment).name}").delete()
+            }
+            tempCameraUri = null
+        }
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->

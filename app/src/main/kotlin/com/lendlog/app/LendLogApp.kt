@@ -44,23 +44,27 @@ class LendLogApp : Application(), Configuration.Provider {
     private fun installCrashLogger() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            try {
-                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-                val log = buildString {
-                    appendLine("=== LendLog Crash Log $timestamp ===")
-                    appendLine("Thread: ${thread.name}")
-                    appendLine()
-                    appendLine(throwable.stackTraceToString())
-                    var cause = throwable.cause
-                    while (cause != null) {
-                        appendLine("Caused by:")
-                        appendLine(cause.stackTraceToString())
-                        cause = cause.cause
-                    }
+            // Capture the log text on the crashing thread (stack trace must be read here),
+            // then write to disk on a separate thread to avoid deadlocking on held locks.
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            val log = buildString {
+                appendLine("=== LendLog Crash Log $timestamp ===")
+                appendLine("Thread: ${thread.name}")
+                appendLine()
+                appendLine(throwable.stackTraceToString())
+                var cause = throwable.cause
+                while (cause != null) {
+                    appendLine("Caused by:")
+                    appendLine(cause.stackTraceToString())
+                    cause = cause.cause
                 }
-                val crashDir = File(filesDir, "crash_logs").also { it.mkdirs() }
-                File(crashDir, "crash-$timestamp.txt").writeText(log)
-            } catch (_: Exception) {}
+            }
+            Thread {
+                try {
+                    val crashDir = File(filesDir, "crash_logs").also { it.mkdirs() }
+                    File(crashDir, "crash-$timestamp.txt").writeText(log)
+                } catch (_: Exception) {}
+            }.start()
             defaultHandler?.uncaughtException(thread, throwable)
         }
     }
