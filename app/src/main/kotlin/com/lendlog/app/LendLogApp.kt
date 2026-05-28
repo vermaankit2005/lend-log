@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.*
+import com.lendlog.app.billing.BillingManager
 import com.lendlog.app.worker.NightlyBackupWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.io.File
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class LendLogApp : Application(), Configuration.Provider {
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var billingManager: BillingManager
 
     private val _workManagerConfiguration by lazy {
         Configuration.Builder()
@@ -36,6 +38,7 @@ class LendLogApp : Application(), Configuration.Provider {
         installCrashLogger()
         createNotificationChannels()
         scheduleNightlyBackup()
+        billingManager.connect()
     }
 
     private fun installCrashLogger() {
