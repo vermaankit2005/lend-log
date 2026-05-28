@@ -10,8 +10,10 @@ import com.lendlog.app.data.datastore.AppPreferences
 import com.lendlog.app.data.db.Loan
 import com.lendlog.app.data.db.LoanDao
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -53,7 +55,18 @@ class LoanRepository @Inject constructor(
         )
     }
 
-    suspend fun deleteLoan(loanId: String) = loanDao.deleteLoanById(loanId)
+    suspend fun deleteLoan(loanId: String) {
+        val loan = loanDao.getLoanById(loanId)
+        loan?.photoUri?.let { deleteAppPhoto(it) }
+        loanDao.deleteLoanById(loanId)
+    }
+
+    private fun deleteAppPhoto(uriString: String) {
+        try {
+            val lastSegment = android.net.Uri.parse(uriString).lastPathSegment ?: return
+            File(context.filesDir, "loan_photos/${File(lastSegment).name}").delete()
+        } catch (_: Exception) {}
+    }
 
     suspend fun canAddLoan(): Boolean {
         val unlocked = appPreferences.isUnlocked.first()
@@ -95,8 +108,8 @@ class LoanRepository @Inject constructor(
         createdAt = System.currentTimeMillis()
     )
 
-    suspend fun exportToDownloads(): Boolean {
-        return try {
+    suspend fun exportToDownloads(): Boolean = withContext(Dispatchers.IO) {
+        try {
             val loans = loanDao.getAllLoansSnapshot()
             val json = Json { prettyPrint = true }.encodeToString(loans)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -126,10 +139,10 @@ class LoanRepository @Inject constructor(
                     put(MediaStore.Downloads.IS_PENDING, 1)
                 }
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-                    ?: return false
+                    ?: return@withContext false
                 val stream = resolver.openOutputStream(uri) ?: run {
                     resolver.delete(uri, null, null)
-                    return false
+                    return@withContext false
                 }
                 stream.bufferedWriter().use { it.write(json) }
                 values.clear()
@@ -147,10 +160,13 @@ class LoanRepository @Inject constructor(
         }
     }
 
-    suspend fun restoreFromJson(jsonContent: String): Boolean {
-        return try {
-            val loans = Json.decodeFromString<List<Loan>>(jsonContent)
-            if (loans.isEmpty()) return false
+    suspend fun restoreFromJson(jsonContent: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val lenientJson = Json { ignoreUnknownKeys = true }
+            val loans = lenientJson.decodeFromString<List<Loan>>(jsonContent)
+            if (loans.isEmpty()) return@withContext false
+            // Delete photo files for loans being replaced before wiping the DB.
+            loanDao.getAllLoansSnapshot().forEach { it.photoUri?.let { uri -> deleteAppPhoto(uri) } }
             loanDao.replaceAll(loans)
             true
         } catch (e: Exception) {

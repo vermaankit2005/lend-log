@@ -22,7 +22,7 @@ object AppModule {
             context,
             LoanDatabase::class.java,
             LoanDatabase.DATABASE_NAME
-        ).build()
+        ).fallbackToDestructiveMigration().build()
 
     @Provides
     @Singleton
