@@ -33,8 +33,9 @@ class LoanRepository @Inject constructor(
     val themeMode: Flow<String> = appPreferences.themeMode
     val notificationsEnabled: Flow<Boolean> = appPreferences.notificationsEnabled
     val reminderDays: Flow<Int> = appPreferences.reminderDays
-    val autoSmsEnabled: Flow<Boolean> = appPreferences.autoSmsEnabled
-    val smsNudgeTipShown: Flow<Boolean> = appPreferences.smsNudgeTipShown
+    // AUTO_SMS_DISABLED: flows preserved for future re-enable
+    // val autoSmsEnabled: Flow<Boolean> = appPreferences.autoSmsEnabled
+    // val smsNudgeTipShown: Flow<Boolean> = appPreferences.smsNudgeTipShown
 
     fun observeLoan(id: String): Flow<Loan?> = loanDao.observeLoanById(id)
 
@@ -64,8 +65,9 @@ class LoanRepository @Inject constructor(
     suspend fun setThemeMode(mode: String) = appPreferences.setThemeMode(mode)
     suspend fun setNotificationsEnabled(enabled: Boolean) = appPreferences.setNotificationsEnabled(enabled)
     suspend fun setReminderDays(days: Int) = appPreferences.setReminderDays(days)
-    suspend fun setAutoSmsEnabled(enabled: Boolean) = appPreferences.setAutoSmsEnabled(enabled)
-    suspend fun setSmsNudgeTipShown(shown: Boolean) = appPreferences.setSmsNudgeTipShown(shown)
+    // AUTO_SMS_DISABLED: setters preserved for future re-enable
+    // suspend fun setAutoSmsEnabled(enabled: Boolean) = appPreferences.setAutoSmsEnabled(enabled)
+    // suspend fun setSmsNudgeTipShown(shown: Boolean) = appPreferences.setSmsNudgeTipShown(shown)
 
     fun createNewLoan(
         itemName: String,

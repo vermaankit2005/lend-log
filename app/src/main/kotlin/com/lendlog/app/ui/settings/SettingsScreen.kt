@@ -49,6 +49,8 @@ fun SettingsScreen(
     var pendingExport by remember { mutableStateOf(false) }
     val writeStoragePermission = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
+    // AUTO_SMS_DISABLED: SEND_SMS permission state removed — re-enable after Play Store approves SEND_SMS
+    /*
     val sendSmsPermission = rememberPermissionState(Manifest.permission.SEND_SMS) { granted ->
         if (granted) {
             viewModel.setAutoSmsEnabled(true)
@@ -56,6 +58,7 @@ fun SettingsScreen(
             scope.launch { snackbarHostState.showSnackbar("SMS permission is required for Auto SMS") }
         }
     }
+    */
 
     LaunchedEffect(writeStoragePermission.status, pendingExport) {
         if (pendingExport && writeStoragePermission.status.isGranted) {
@@ -102,6 +105,8 @@ fun SettingsScreen(
         )
     }
 
+    // AUTO_SMS_DISABLED: confirmation sheet removed — re-enable after Play Store approves SEND_SMS
+    /*
     if (uiState.showAutoSmsConfirm) {
         AutoSmsConfirmSheet(
             onDismiss = viewModel::dismissAutoSmsConfirm,
@@ -115,6 +120,7 @@ fun SettingsScreen(
             }
         )
     }
+    */
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
@@ -275,6 +281,8 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
 
+            // AUTO_SMS_DISABLED: entire NUDGES section removed — re-enable after Play Store approves SEND_SMS
+            /*
             // ── NUDGES ────────────────────────────────────────────────────
             SectionHeader("NUDGES")
 
@@ -353,6 +361,7 @@ fun SettingsScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+            */
 
             // ── BACKUP ────────────────────────────────────────────────────
             SectionHeader("BACKUP")
@@ -571,6 +580,8 @@ private fun SettingsRow(
 private fun formatDateTime(epochMillis: Long): String =
     SimpleDateFormat("MMM d, yyyy · HH:mm", Locale.getDefault()).format(Date(epochMillis))
 
+// AUTO_SMS_DISABLED: AutoSmsConfirmSheet and BulletPoint removed — re-enable after Play Store approves SEND_SMS
+/*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AutoSmsConfirmSheet(
@@ -683,3 +694,4 @@ private fun BulletPoint(text: String) {
         Text(text, style = MaterialTheme.typography.bodyMedium, color = N700)
     }
 }
+*/

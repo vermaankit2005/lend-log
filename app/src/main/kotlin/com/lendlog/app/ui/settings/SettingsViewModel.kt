@@ -13,8 +13,8 @@ private data class PrefsSnapshot(
     val unlocked: Boolean,
     val notif: Boolean,
     val days: Int,
-    val ts: Long,
-    val autoSms: Boolean
+    val ts: Long
+    // AUTO_SMS_DISABLED: val autoSms: Boolean
 )
 
 data class SettingsUiState(
@@ -27,8 +27,8 @@ data class SettingsUiState(
     val exportResult: Boolean? = null,
     val isRestoring: Boolean = false,
     val restoreResult: Boolean? = null,
-    val autoSmsEnabled: Boolean = false,
-    val showAutoSmsConfirm: Boolean = false,
+    // AUTO_SMS_DISABLED: val autoSmsEnabled: Boolean = false,
+    // AUTO_SMS_DISABLED: val showAutoSmsConfirm: Boolean = false,
 )
 
 @HiltViewModel
@@ -42,21 +42,21 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // AUTO_SMS_DISABLED: was a 5-flow combine; autoSmsEnabled removed
             combine(
                 repository.isUnlocked,
                 repository.notificationsEnabled,
                 repository.reminderDays,
-                repository.lastBackupTimestamp,
-                repository.autoSmsEnabled
-            ) { unlocked, notif, days, ts, autoSms ->
-                PrefsSnapshot(unlocked, notif, days, ts, autoSms)
+                repository.lastBackupTimestamp
+            ) { unlocked, notif, days, ts ->
+                PrefsSnapshot(unlocked, notif, days, ts)
             }.collect { snap ->
                 _uiState.update { it.copy(
                     isUnlocked           = snap.unlocked,
                     notificationsEnabled = snap.notif,
                     reminderDays         = snap.days,
-                    lastBackupTimestamp  = snap.ts,
-                    autoSmsEnabled       = snap.autoSms
+                    lastBackupTimestamp  = snap.ts
+                    // AUTO_SMS_DISABLED: autoSmsEnabled = snap.autoSms
                 ) }
             }
         }
@@ -114,6 +114,8 @@ class SettingsViewModel @Inject constructor(
     fun clearExportResult() = _uiState.update { it.copy(exportResult = null) }
     fun clearRestoreResult() = _uiState.update { it.copy(restoreResult = null) }
 
+    // AUTO_SMS_DISABLED: auto SMS ViewModel functions — re-enable after Play Store approves SEND_SMS
+    /*
     fun onAutoSmsToggled(enabling: Boolean) {
         if (enabling) {
             _uiState.update { it.copy(showAutoSmsConfirm = true) }
@@ -140,4 +142,5 @@ class SettingsViewModel @Inject constructor(
             }
         }
     }
+    */
 }

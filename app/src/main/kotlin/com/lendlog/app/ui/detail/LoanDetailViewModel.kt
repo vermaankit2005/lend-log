@@ -18,9 +18,9 @@ data class DetailUiState(
     val showDeleteDialog: Boolean = false,
     val showReturnDialog: Boolean = false,
     val deleted: Boolean = false,
-    val showConfetti: Boolean = false,
-    val autoSmsEnabled: Boolean = false,
-    val smsNudgeTipShown: Boolean = false
+    val showConfetti: Boolean = false
+    // AUTO_SMS_DISABLED: val autoSmsEnabled: Boolean = false,
+    // AUTO_SMS_DISABLED: val smsNudgeTipShown: Boolean = false
 )
 
 @HiltViewModel
@@ -36,14 +36,10 @@ class LoanDetailViewModel @Inject constructor(
     val uiState: StateFlow<DetailUiState> = _uiState.asStateFlow()
 
     init {
+        // AUTO_SMS_DISABLED: was a 3-flow combine with autoSmsEnabled + smsNudgeTipShown
         viewModelScope.launch {
-            combine(
-                repository.observeLoan(loanId),
-                repository.autoSmsEnabled,
-                repository.smsNudgeTipShown
-            ) { loan, autoSms, tipShown -> Triple(loan, autoSms, tipShown) }
-            .collect { (loan, autoSms, tipShown) ->
-                _uiState.update { it.copy(loan = loan, autoSmsEnabled = autoSms, smsNudgeTipShown = tipShown) }
+            repository.observeLoan(loanId).collect { loan ->
+                _uiState.update { it.copy(loan = loan) }
             }
         }
     }
@@ -61,9 +57,12 @@ class LoanDetailViewModel @Inject constructor(
         }
     }
 
+    // AUTO_SMS_DISABLED: fun markSmsNudgeTipShown() — re-enable after Play Store approves SEND_SMS
+    /*
     fun markSmsNudgeTipShown() {
         viewModelScope.launch { repository.setSmsNudgeTipShown(true) }
     }
+    */
 
     fun markReturned() {
         viewModelScope.launch {

@@ -17,7 +17,7 @@ import com.lendlog.app.MainActivity
 import com.lendlog.app.R
 import com.lendlog.app.data.datastore.AppPreferences
 import com.lendlog.app.data.db.LoanDao
-import com.lendlog.app.util.SmsHelper
+// AUTO_SMS_DISABLED: import com.lendlog.app.util.SmsHelper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -53,9 +53,12 @@ class LoanNotificationWorker @AssistedInject constructor(
 
         postNotification(loanId, itemName, borrowerName, isOverdue, reminderDays)
 
+        // AUTO_SMS_DISABLED: auto SMS removed — re-enable after Play Store approves SEND_SMS permission
+        /*
         if (!borrowerPhone.isNullOrBlank() && appPreferences.autoSmsEnabled.first()) {
             SmsHelper.sendAutoSms(context, borrowerPhone, itemName)
         }
+        */
 
         return Result.success()
     }
